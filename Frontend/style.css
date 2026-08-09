@@ -3,6 +3,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: #f4f6f9;
+    color: #333;
 }
 
 .navbar {
@@ -27,15 +28,33 @@ body {
 }
 
 .section-container {
-    padding: 40px;
+    padding: 30px 50px;
 }
 
-.course-card, .progress-box {
+.course-grid, .dashboard-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.course-card, .card, .player-box {
     background: white;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    max-width: 300px;
+    min-width: 250px;
+}
+
+.video-placeholder {
+    background-color: #1a252f;
+    color: white;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    margin-bottom: 15px;
 }
 
 .btn {
@@ -45,4 +64,9 @@ body {
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    background-color: #2980b9;
 }
