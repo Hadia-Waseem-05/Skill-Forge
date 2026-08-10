@@ -3,70 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillForge - Learning Platform</title>
+    <title>SkillForge - Courses</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="logo">SkillForge</div>
         <ul class="nav-links">
-            <li><a href="#catalog">Courses</a></li>
-            <li><a href="#player">Lesson Player</a></li>
-            <li><a href="#dashboard">Dashboard</a></li>
+            <li><a href="index.html">Courses</a></li>
+            <li><a href="login.html" class="btn">Login</a></li>
         </ul>
     </nav>
 
-    <!-- 1. Course Catalog Section -->
-    <section id="catalog" class="section-container">
+    <section class="section-container">
         <h2>Course Catalog</h2>
         <div class="course-grid">
             <div class="course-card">
                 <h3>Web Development Basics</h3>
                 <p>Learn HTML, CSS, JavaScript & Figma</p>
-                <button class="btn">View Course</button>
+                <a href="login.html" class="btn">Enroll Now</a>
             </div>
             <div class="course-card">
                 <h3>UI/UX Design Essentials</h3>
                 <p>Master wireframing and interactive prototyping.</p>
-                <button class="btn">View Course</button>
+                <a href="login.html" class="btn">Enroll Now</a>
             </div>
         </div>
     </section>
-
-    <!-- 2. Lesson Player + Progress Screens -->
-    <section id="player" class="section-container">
-        <h2>Lesson Player</h2>
-        <div class="player-box">
-            <div class="video-placeholder">
-                <p>▶ Video / Lesson Area</p>
-            </div>
-            <div class="lesson-info">
-                <h3>Lesson 1: Introduction to SkillForge</h3>
-                <p>Status: In Progress</p>
-                <button class="btn">Mark as Completed</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- 3. Student & Instructor Dashboards -->
-    <section id="dashboard" class="section-container">
-        <h2>Dashboards</h2>
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Student Dashboard</h3>
-                <p>Enrolled Courses: 2</p>
-                <p>Overall Progress: 60%</p>
-            </div>
-            <div class="card">
-                <h3>Instructor Dashboard</h3>
-                <p>Total Students: 120</p>
-                <p>Active Courses: 3</p>
-            </div>
-        </div>
-    </section>
-
-    <script src="script.js"></script>
 </body>
 </html>
