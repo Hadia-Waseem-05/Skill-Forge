@@ -168,3 +168,17 @@ export const verifyUser = async ( req, res, next ) => {
         res.status(401).json({status: false, message: "Invalid or expired token."})
     }
 };
+
+export const verifyInstructor = async (req, res, next) => {
+    try {
+        const user = await Users.findById(req.user.id);
+
+        if (!user || user.role !== "instructor") {
+            return res.status(403).json({ status: false, message: "Instructor access required" });
+        }
+
+        next();
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
