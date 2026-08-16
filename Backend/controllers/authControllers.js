@@ -15,12 +15,16 @@ export const register = async (req, res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        const existingUser = await Users.findOne({ email });
+        const cleanEmail = email.trim().toLowerCase();
+        const existingUser = await Users.findOne({ email: cleanEmail });
+        
         if (existingUser) {
             return res.status(409).json({ message: "Account already exists!" });
         }
 
-        const user = await Users.create({ name, email, password, role: role || "student" });
+        const user = await Users.create({
+         name, email: cleanEmail, password, role: role || "student" });
+         
         const token = generateToken(user._id);
 
         res.status(201).json({
@@ -48,14 +52,15 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Email and password are required" });
         }
 
-        const user = await Users.findOne({ email });
+        const cleanEmail = email.trim().toLowerCase();
+        const user = await Users.findOne({ email: cleanEmail });
         if (!user) {
             return res.status(401).json({ message: "User not found" });
         }
 
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(401).json({ message: "Invalid password" });
+            return res.status(401).json({ message: "User not found" });
         }
 
         const token = generateToken(user._id);
@@ -79,6 +84,9 @@ export const login = async (req, res) => {
 export const delUser = async (req, res) => {
     try {
         const { id } = req.params;
+        if(req.user.id !== id){
+            return res.status(403).json({status: false, message: "You are not aunthorized"})
+        };
         const deleted = await Users.findByIdAndDelete(id);
 
         if (!deleted) {
@@ -94,6 +102,9 @@ export const delUser = async (req, res) => {
 export const getUser = async (req, res) => {
     try {
         const { id } = req.params;
+        if(req.user.id !== id){
+        return res.status(403).json({status: false, message: "You are not aunthorized"})
+        };
         const data = await Users.findById(id).select("-password");
 
         if (!data) {
@@ -109,7 +120,11 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, role } = req.body;
+        const { name } = req.body;
+
+        if(req.user.id !== id){
+        return res.status(403).json({status: false, message: "You are not aunthorized"})
+        };
 
         if (!name || name.trim() === "") {
             return res.status(400).json({ message: "Name is required" });
@@ -117,7 +132,7 @@ export const updateUser = async (req, res) => {
 
         const updated = await Users.findByIdAndUpdate(
             id,
-            { name, role },
+            { name },
             { new: true, runValidators: true }
         ).select("-password");
 
@@ -128,5 +143,22 @@ export const updateUser = async (req, res) => {
         res.status(200).json({ message: "Updated successfully!", data: updated, status: true });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const verifyUser = async ( req, res, next ) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if(!token){
+       return res.status(401).json({status: false, message: "No token provided."})
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+
+    } catch (error) {
+        res.status(401).json({status: false, message: "Invalid or expired token."})
     }
 };
