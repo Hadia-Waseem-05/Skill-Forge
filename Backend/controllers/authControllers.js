@@ -23,7 +23,13 @@ export const register = async (req, res) => {
         }
 
         const user = await Users.create({
+<<<<<<< HEAD
          name, email: cleanEmail, password, role: role || "student" });
+=======
+         name, email: cleanEmail, password, role: role || "student",
+         avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
+        });
+>>>>>>> 9a289bcf347a106e96940b009090b9e896452908
          
         const token = generateToken(user._id);
 
@@ -120,19 +126,35 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
+<<<<<<< HEAD
         const { name } = req.body;
 
         if(req.user.id !== id){
         return res.status(403).json({status: false, message: "You are not aunthorized"})
         };
+=======
+        const { name, bio, avatar } = req.body;
+
+        if (req.user.id !== id) {
+            return res.status(403).json({ status: false, message: "You are not authorized" });
+        }
+>>>>>>> 9a289bcf347a106e96940b009090b9e896452908
 
         if (!name || name.trim() === "") {
             return res.status(400).json({ message: "Name is required" });
         }
 
+        const updateData = { name };
+        if (bio !== undefined) updateData.bio = bio.trim();
+        if (avatar !== undefined) updateData.avatar = avatar;
+
         const updated = await Users.findByIdAndUpdate(
             id,
+<<<<<<< HEAD
             { name },
+=======
+            updateData,
+>>>>>>> 9a289bcf347a106e96940b009090b9e896452908
             { new: true, runValidators: true }
         ).select("-password");
 
@@ -161,4 +183,21 @@ export const verifyUser = async ( req, res, next ) => {
     } catch (error) {
         res.status(401).json({status: false, message: "Invalid or expired token."})
     }
+<<<<<<< HEAD
+=======
+};
+
+export const verifyInstructor = async (req, res, next) => {
+    try {
+        const user = await Users.findById(req.user.id);
+
+        if (!user || user.role !== "instructor") {
+            return res.status(403).json({ status: false, message: "Instructor access required" });
+        }
+
+        next();
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+>>>>>>> 9a289bcf347a106e96940b009090b9e896452908
 };

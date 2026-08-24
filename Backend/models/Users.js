@@ -22,6 +22,16 @@ const userSchema = new mongoose.Schema(
             enum: ["student", "instructor"],
             default: "student",
          },
+         bio: {
+           type: String,
+           trim: true,
+           maxlength: 300,
+           default: "",
+         },
+         avatar: {
+           type: String,
+           default: "https://api.dicebear.com/7.x/initials/svg?seed=User",  
+         },
     },
     {
         timestamps: true
