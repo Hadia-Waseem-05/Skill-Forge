@@ -18,6 +18,11 @@ const lessonSchema = new mongoose.Schema(
             trim: true,
             default: "",
         },
+        description: {
+            type: String,
+            trim: true,
+            default: "",
+        },
         order_index: {
             type: Number,
             default: 0,

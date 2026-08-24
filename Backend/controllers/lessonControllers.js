@@ -1,5 +1,6 @@
 import Courses from "../models/Courses.js";
 import Lessons from "../models/Lessons.js";
+import Enrollments from "../models/Enrollments.js";
 
 const getCourseAndCheckOwnership = async (courseId, userId) => {
     const course = await Courses.findById(courseId);
@@ -21,8 +22,15 @@ export const getLessonsByCourse = async (req, res) => {
 
         const isOwner = req.user && course.instructor_id.toString() === req.user.id;
 
-        if (!course.published && !isOwner) {
-            return res.status(404).json({ message: "Course not found" });
+        if (!isOwner) {
+            const isEnrolled = await Enrollments.findOne({
+                student_id: req.user.id,
+                course_id: courseId,
+            });
+
+            if (!isEnrolled) {
+                return res.status(403).json({ message: "You must be enrolled to view these lessons" });
+            }
         }
 
         const lessons = await Lessons.find({ course_id: courseId }).sort({ order_index: 1 });
@@ -48,8 +56,15 @@ export const getLesson = async (req, res) => {
         const isOwner =
             req.user && lesson.course_id.instructor_id._id.toString() === req.user.id;
 
-        if (!lesson.course_id.published && !isOwner) {
-            return res.status(404).json({ message: "Lesson not found" });
+        if (!isOwner) {
+            const isEnrolled = await Enrollments.findOne({
+                student_id: req.user.id,
+                course_id: lesson.course_id._id,
+            });
+
+            if (!isEnrolled) {
+                return res.status(403).json({ message: "You must be enrolled to view this lesson" });
+            }
         }
 
         res.status(200).json({ status: true, data: lesson });
@@ -60,7 +75,7 @@ export const getLesson = async (req, res) => {
 
 export const createLesson = async (req, res) => {
     try {
-        const { title, content, course_id, order_index } = req.body;
+        const { title, content, description, course_id, order_index } = req.body;
 
         if (!title || title.trim() === "" || !course_id) {
             return res.status(400).json({ message: "Title and course_id are required" });
@@ -74,6 +89,7 @@ export const createLesson = async (req, res) => {
         const lesson = await Lessons.create({
             title: title.trim(),
             content,
+            description: description || "",
             course_id,
             order_index,
         });
@@ -102,7 +118,7 @@ export const updateLesson = async (req, res) => {
             return res.status(error.status).json({ message: error.message });
         }
 
-        const { title, content, order_index } = req.body;
+        const { title, content, description, order_index } = req.body;
         const updateData = {};
 
         if (title !== undefined) {
@@ -112,6 +128,7 @@ export const updateLesson = async (req, res) => {
             updateData.title = title.trim();
         }
         if (content !== undefined) updateData.content = content;
+        if (description !== undefined) updateData.description = description;
         if (order_index !== undefined) updateData.order_index = order_index;
 
         const updated = await Lessons.findByIdAndUpdate(id, updateData, {

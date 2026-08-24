@@ -26,7 +26,7 @@ const courseSchema = new mongoose.Schema(
            thumbnail: {
            type: String,
            trim: true,
-           default: "",
+           default: "https://placehold.co/600x400/D6E6F2/333333?text=Course",
         },
     },
     {

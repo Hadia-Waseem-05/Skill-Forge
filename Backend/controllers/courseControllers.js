@@ -48,7 +48,7 @@ export const createCourse = async (req, res) => {
             title: title.trim(),
             description: description.trim(),
             published,
-            thumbnail: thumbnail || "",
+            thumbnail: thumbnail || `https://placehold.co/600x400/D6E6F2/333333?text=${encodeURIComponent(title)}`,
             instructor_id: req.user.id,
         });
 
