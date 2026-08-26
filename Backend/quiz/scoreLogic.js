@@ -9,3 +9,5 @@ function calculateScore(userAnswers, correctAnswers) {
 
   return score;
 }
+
+export default calculateScore;
