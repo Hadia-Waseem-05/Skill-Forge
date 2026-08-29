@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillForge - Student Dashboard</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --border: #334155;
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--accent); text-decoration: none; }
+    .nav-links { list-style: none; display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { color: var(--text-main); text-decoration: none; font-size: 0.95rem; }
+    .nav-links a:hover { color: var(--accent); }
+
+    .main-layout {
+      display: flex;
+      max-width: 1300px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      width: 100%;
+      gap: 1.8rem;
+      flex: 1;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      height: fit-content;
+    }
+    .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+    .sidebar-menu li button {
+      width: 100%;
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: 0.2s;
+    }
+    .sidebar-menu li button:hover, .sidebar-menu li button.active {
+      background: rgba(79, 70, 229, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .content-area {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+    }
+
+    .page-title { font-size: 1.6rem; margin-bottom: 0.3rem; }
+    .page-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.8rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .stat-card h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .stat-card .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+
+    .card-item {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-muted); }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: white;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+
+    .progress-bar-bg {
+      background: #020617;
+      border-radius: 20px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+      margin: 0.6rem 0;
+    }
+    .progress-bar-fill { background: var(--accent); height: 100%; border-radius: 20px; }
+
+    .lesson-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 0.6rem;
+    }
+    .lesson-item.active { border-color: var(--accent); }
+
+    .player-window {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      height: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 850px) {
+      .main-layout { flex-direction: column; }
+      .sidebar { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="logo">SkillForge</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="student-dashboard.html" style="color: var(--accent);">Student Area</a></li>
+      <li><a href="login.html" onclick="localStorage.clear();">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-layout">
+    <aside class="sidebar">
+      <ul class="sidebar-menu">
+        <li><button id="tab-profile" class="active" onclick="setTab('student-profile')">👤 My Profile</button></li>
+        <li><button id="tab-courses" onclick="setTab('my-courses')">📚 My Courses</button></li>
+        <li><button id="tab-progress" onclick="setTab('progress-tracking')">📊 Progress Tracking</button></li>
+        <li><button id="tab-quiz" onclick="setTab('quiz-cert')">🏆 Quiz & Certificates</button></li>
+      </ul>
+    </aside>
+
+    <main class="content-area" id="content-view"></main>
+  </div>
+
+  <script>
+    let currentTab = 'student-profile';
+    let selectedCourseId = null;
+    let selectedLessonId = 1;
+
+    let studentCourses = [
+      {
+        id: 101,
+        title: 'Web Development Basics',
+        description: 'Comprehensive introduction to HTML5, modern CSS3, and core JavaScript.',
+        lessons: [
+          { id: 1, title: '1. Introduction & Setup', duration: '12 mins', completed: true },
+          { id: 2, title: '2. HTML5 Structure & Semantic Tags', duration: '18 mins', completed: true },
+          { id: 3, title: '3. CSS3 Flexbox & Layouts', duration: '25 mins', completed: false },
+          { id: 4, title: '4. JavaScript DOM Manipulation', duration: '30 mins', completed: false }
+        ]
+      },
+      {
+        id: 102,
+        title: 'Full-Stack Node.js & Databases',
+        description: 'Build robust REST APIs, handle JWT authentication, and schema queries.',
+        lessons: [
+          { id: 1, title: '1. Node Architecture & Modules', duration: '15 mins', completed: true },
+          { id: 2, title: '2. Express Routing & Middleware', duration: '22 mins', completed: false },
+          { id: 3, title: '3. MongoDB CRUD Operations', duration: '35 mins', completed: false }
+        ]
+      }
+    ];
+
+    function setTab(tab) {
+      currentTab = tab;
+      selectedCourseId = null;
+      document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
+      if (tab === 'student-profile') document.getElementById('tab-profile').classList.add('active');
+      if (tab === 'my-courses') document.getElementById('tab-courses').classList.add('active');
+      if (tab === 'progress-tracking') document.getElementById('tab-progress').classList.add('active');
+      if (tab === 'quiz-cert') document.getElementById('tab-quiz').classList.add('active');
+      renderContent();
+    }
+
+    function renderContent() {
+      const view = document.getElementById('content-view');
+
+      if (currentTab === 'student-profile') {
+        view.innerHTML = `
+          <h1 class="page-title">Student Profile</h1>
+          <p class="page-desc">Manage your personal profile and learning track preferences.</p>
+          <form onsubmit="event.preventDefault(); alert('Profile updated successfully!');">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group"><label>Full Name</label><input type="text" value="Mahnoor Amjad" required></div>
+              <div class="form-group"><label>Email Address</label><input type="email" value="mahnoor@example.com" required></div>
+            </div>
+            <div class="form-group"><label>Learning Track</label><input type="text" value="Frontend & Full-Stack Development"></div>
+            <div class="form-group"><label>Bio</label><textarea rows="3">Learning modern web architectures and frontend interfaces on SkillForge.</textarea></div>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </form>
+        `;
+      } else if (currentTab === 'my-courses') {
+        if (!selectedCourseId) {
+          view.innerHTML = `
+            <h1 class="page-title">My Enrolled Courses</h1>
+            <p class="page-desc">Click any course to open description, lesson player, and manual completion buttons.</p>
+            ${studentCourses.map(course => {
+              const comp = course.lessons.filter(l => l.completed).length;
+              const percent = Math.round((comp / course.lessons.length) * 100);
+              return `
+                <div class="card-item" style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                  <div style="flex: 1; min-width: 250px;">
+                    <h3 style="font-size: 1.2rem; margin-bottom: 0.3rem;">${course.title}</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.6rem;">${course.description}</p>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${percent}%;"></div></div>
+                    <span style="font-size: 0.85rem; color: var(--accent);">${comp} of ${course.lessons.length} Lessons Finished (${percent}%)</span>
+                  </div>
+                  <button class="btn-primary" onclick="openCourse(${course.id})">Open Course & Lessons</button>
+                </div>
+              `;
+            }).join('')}
+          `;
+        } else {
+          const course = studentCourses.find(c => c.id === selectedCourseId);
+          const currentLesson = course.lessons.find(l => l.id === selectedLessonId) || course.lessons[0];
+
+          view.innerHTML = `
+            <button class="btn-secondary" onclick="selectedCourseId=null; renderContent();" style="margin-bottom: 1rem;">← Back to Courses</button>
+            <h1 class="page-title">${course.title}</h1>
+            <p class="page-desc">${course.description}</p>
+
+            <div class="player-window">
+              <p style="font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 0.4rem;">▶ Playing: ${currentLesson.title}</p>
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Duration: ${currentLesson.duration}</p>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+              <div>
+                <strong>Current Lesson:</strong> <span style="color: var(--text-muted);">${currentLesson.title}</span>
+                <div style="font-size: 0.85rem; margin-top: 0.2rem; color: ${currentLesson.completed ? 'var(--success)' : 'var(--warning)'};">
+                  ${currentLesson.completed ? '✓ Status: Completed' : '⏳ Status: In Progress'}
+                </div>
+              </div>
+              <button class="btn-success" onclick="toggleComplete(${course.id}, ${currentLesson.id})">
+                ${currentLesson.completed ? '✓ Completed (Click to Undo)' : '✔ Mark as Completed'}
+              </button>
+            </div>
+
+            <h3 style="margin-bottom: 0.8rem;">Curriculum Lessons</h3>
+            ${course.lessons.map(l => `
+              <div class="lesson-item ${l.id === currentLesson.id ? 'active' : ''}">
+                <div>
+                  <strong style="color: ${l.id === currentLesson.id ? 'var(--accent)' : 'var(--text-main)'}; cursor: pointer;" onclick="playLesson(${l.id})">${l.title}</strong>
+                  <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">(${l.duration})</span>
+                </div>
+                <div>
+                  ${l.completed ? '<span style="color: var(--success); font-size: 0.85rem; font-weight: 700; margin-right: 0.6rem;">✓ Done</span>' : ''}
+                  <button class="btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;" onclick="playLesson(${l.id})">Play</button>
+                </div>
+              </div>
+            `).join('')}
+          `;
+        }
+      } else if (currentTab === 'progress-tracking') {
+        let total = 0, done = 0;
+        studentCourses.forEach(c => { total += c.lessons.length; done += c.lessons.filter(l => l.completed).length; });
+        const overall = Math.round((done / total) * 100);
+
+        view.innerHTML = `
+          <h1 class="page-title">Progress Tracking</h1>
+          <p class="page-desc">Overview of your study hours and completed course milestones.</p>
+          <div class="stats-grid">
+            <div class="stat-card"><h4>Overall Completion</h4><div class="stat-number">${overall}%</div></div>
+            <div class="stat-card"><h4>Lessons Finished</h4><div class="stat-number">${done} / ${total}</div></div>
+            <div class="stat-card"><h4>Active Courses</h4><div class="stat-number">${studentCourses.length}</div></div>
+          </div>
+          <h3 style="margin: 1.5rem 0 1rem;">Course Progress Breakdown</h3>
+          ${studentCourses.map(c => {
+            const finished = c.lessons.filter(l => l.completed).length;
+            const p = Math.round((finished / c.lessons.length) * 100);
+            return `
+              <div class="card-item">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                  <strong>${c.title}</strong><span style="color: var(--accent); font-weight: 600;">${p}%</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${p}%;"></div></div>
+                <small style="color: var(--text-muted);">${finished} of ${c.lessons.length} lessons finished</small>
+              </div>
+            `;
+          }).join('')}
+        `;
+      } else if (currentTab === 'quiz-cert') {
+        view.innerHTML = `
+          <h1 class="page-title">Quizzes & Certifications</h1>
+          <p class="page-desc">Complete knowledge checks and claim your verified certificates.</p>
+          <h3 style="margin-bottom: 1rem;">Assessment Quiz</h3>
+          <div class="card-item" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h4>Web Development Basics: Comprehensive Quiz</h4>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">10 Questions • 15 Minutes • Passing Score: 80%</p>
+            </div>
+            <a href="player.html" class="btn-primary">Start Quiz</a>
+          </div>
+          <h3 style="margin: 2rem 0 1rem;">Earned Certificates</h3>
+          <div class="card-item" style="border-color: var(--accent); background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="color: var(--success); font-weight: 700; font-size: 0.85rem;">✓ VERIFIED & ISSUED</span>
+              <h4 style="font-size: 1.15rem; margin: 0.3rem 0;">Web Development Fundamentals</h4>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">SkillForge Verified Completion</p>
+            </div>
+            <button class="btn-primary" onclick="alert('Downloading Certificate PDF...')">Download Certificate</button>
+          </div>
+        `;
+      }
+    }
+
+    function openCourse(id) { selectedCourseId = id; selectedLessonId = 1; renderContent(); }
+    function playLesson(id) { selectedLessonId = id; renderContent(); }
+    function toggleComplete(cId, lId) {
+      const course = studentCourses.find(c => c.id === cId);
+      if (course) {
+        const lesson = course.lessons.find(l => l.id === lId);
+        if (lesson) { lesson.completed = !lesson.completed; renderContent(); }
+      }
+    }
+
+    renderContent();
+  </script>
+</body>
+</html>

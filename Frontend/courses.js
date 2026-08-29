@@ -22,6 +22,7 @@ async function loadCourses() {
 
         grid.innerHTML = courses.map(renderCourseCard).join("");
         attachEnrollHandlers();
+        setupScrollReveal();
 
     } catch (err) {
         console.error(err);
@@ -32,8 +33,10 @@ async function loadCourses() {
 }
 
 function renderCourseCard(course) {
+    const thumbnail = course.thumbnail || "https://placehold.co/600x400/D6E6F2/333333?text=Course";
     return `
         <div class="course-card">
+            <img src="${thumbnail}" alt="${course.title}" class="course-thumbnail">
             <h3>${course.title}</h3>
             <p>${course.description || ""}</p>
             <button class="btn accent-btn enroll-btn" data-course-id="${course._id}">
@@ -46,6 +49,24 @@ function renderCourseCard(course) {
 function attachEnrollHandlers() {
     document.querySelectorAll(".enroll-btn").forEach((btn) => {
         btn.addEventListener("click", () => handleEnroll(btn));
+    });
+}
+
+function setupScrollReveal() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+    });
+
+    document.querySelectorAll(".course-card").forEach((card) => {
+        observer.observe(card);
     });
 }
 

@@ -4,17 +4,23 @@ function initNavbar() {
 
     const token = localStorage.getItem("token");
     const name = localStorage.getItem("name");
+    const role = localStorage.getItem("role");
+
+    const dashboardUrl = role === "instructor" ? "dashboard-instructor.html" : "dashboard-student.html";
 
     const authSection = token && name
         ? `
-            <li class="nav-user"><span class="nav-username">Hi, ${name.split(" ")[0]}</span></li>
+            <li class="nav-user">
+                <a href="${dashboardUrl}" class="nav-username">Hi, ${name.split(" ")[0]}</a>
+            </li>
             <li><button id="logoutBtn" class="btn nav-logout-btn">Logout</button></li>
           `
         : `<li><a href="login.html" class="btn nav-login-btn">Login</a></li>`;
 
     placeholder.innerHTML = `
         <nav class="navbar">
-            <div class="logo"><a href="index.html">SkillForge</a></div>
+            <div class="logo">
+            <a href="index.html"><image src="skillforge.png" class="nav-logo"/></a></div>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="index.html#courses" class="nav-scroll-link" data-target="courses">Courses</a></li>
