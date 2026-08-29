@@ -103,6 +103,7 @@ export const delUser = async (req, res) => {
 
 export const getUser = async (req, res) => {
     try {
+        console.log("❌ GET USER (/:id) ROUTE HIT — params.id =", req.params.id);
         const { id } = req.params;
         if(req.user.id !== id){
         return res.status(403).json({status: false, message: "You are not aunthorized"})
@@ -153,6 +154,7 @@ export const updateUser = async (req, res) => {
 };
 
 export const verifyUser = async ( req, res, next ) => {
+    console.log("✅ VERIFY MIDDLEWARE HIT — path =", req.originalUrl);
     const token = req.headers.authorization?.split(" ")[1];
 
     if(!token){

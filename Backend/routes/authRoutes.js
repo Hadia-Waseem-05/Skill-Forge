@@ -5,9 +5,13 @@ const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.put("/:id",verifyUser, updateUser);
-router.get("/:id",verifyUser, getUser);
-router.delete("/:id",verifyUser, delUser);
-router.get("/verify", verifyUser)
+
+router.get("/verify", verifyUser, (req, res) => {
+    res.status(200).json({ status: true, message: "Token is valid", user: req.user });
+});                                                                                    // ← yahan move kar diya
+
+router.put("/:id", verifyUser, updateUser);
+router.get("/:id", verifyUser, getUser);
+router.delete("/:id", verifyUser, delUser);
 
 export default router;
