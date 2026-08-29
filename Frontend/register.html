@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillForge - Register</title>
+    <link rel="stylesheet" href="login-style.css">
+</head>
+<body>
+   
+    <div id="navbar-placeholder"></div>
+    <section class="section-container auth-container">
+        <div class="card auth-box">
+            <h2>Create your account</h2>
+
+            <p id="errorMsg" class="error-text" hidden></p>
+
+            <form id="registerForm">
+                <input type="text" id="name" placeholder="Full Name" required>
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="password" id="password" placeholder="Password" required>
+
+                <label class="role-label">I am joining as:</label>
+                <div class="role-toggle">
+                    <input type="radio" name="role" id="roleStudent" value="student" checked>
+                    <label for="roleStudent" class="role-option">Student</label>
+
+                    <input type="radio" name="role" id="roleInstructor" value="instructor">
+                    <label for="roleInstructor" class="role-option">Instructor</label>
+                </div>
+
+                <button type="submit" class="btn block-btn" id="registerBtn">Create Account</button>
+            </form>
+
+            <p class="helper-text">
+                Already have an account? <a href="login.html">Login</a>
+            </p>
+        </div>
+    </section>
+
+    <script src="auth.js"></script>
+     <script src="navbar.js"></script>
+</body>
+</html>
