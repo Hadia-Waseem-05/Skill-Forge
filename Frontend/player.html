@@ -1,31 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillForge - Lesson Player</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillForge - Lesson Player & Quiz</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --border: #334155;
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .player-layout {
+      display: flex;
+      max-width: 1300px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      width: 100%;
+      gap: 1.8rem;
+      flex: 1;
+    }
+
+    .main-player-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .video-screen {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .play-icon {
+      font-size: 3.5rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .player-actions-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.65rem 1.4rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: 0.2s;
+    }
+    .btn-action:hover { background: var(--primary-hover); }
+
+    .btn-mark {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+    .btn-mark:hover {
+      background: var(--success);
+      color: #0f172a;
+    }
+
+    .sidebar-content {
+      width: 320px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      height: fit-content;
+    }
+
+    .sidebar-content h3 {
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .lesson-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 0.6rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .lesson-item:hover {
+      border-color: var(--accent);
+    }
+
+    .lesson-item.active {
+      border-color: var(--accent);
+      background: rgba(6, 182, 212, 0.1);
+    }
+
+    .lesson-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .lesson-status-icon {
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .lesson-item.completed .lesson-status-icon {
+      color: var(--success);
+    }
+
+    @media (max-width: 850px) {
+      .player-layout { flex-direction: column; }
+      .sidebar-content { width: 100%; }
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">SkillForge</div>
-        <ul class="nav-links">
-            <li><a href="dashboard.html">Back to Dashboard</a></li>
-        </ul>
-    </nav>
 
-    <section class="section-container">
-        <h2>Web Development Basics</h2>
-        <div class="player-box">
-            <div class="video-placeholder">
-                <p>▶ Video / Lesson Area</p>
-            </div>
-            <div class="lesson-info">
-                <h3>Lesson 1: Introduction to SkillForge</h3>
-                <p>Status: In Progress</p>
-                <button class="btn">Mark as Completed</button>
-            </div>
+  <!-- Global Navbar Component Placeholder -->
+  <div id="navbar"></div>
+
+  <div class="player-layout">
+    <main class="main-player-pane">
+      <div class="video-screen">
+        <div class="play-icon">▶</div>
+        <h2 id="video-title">1. Introduction to SkillForge</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.4rem;" id="video-duration">Duration: 12 mins</p>
+      </div>
+
+      <div class="player-actions-bar">
+        <div>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Current Status:</span>
+          <h4 id="status-indicator" style="color: var(--success); margin-top: 0.2rem;">✓ Completed</h4>
         </div>
-    </section>
+
+        <div style="display: flex; gap: 0.8rem;">
+          <button id="btn-toggle-mark" class="btn-action btn-mark" onclick="toggleCurrentLesson()">
+            ✓ Completed (Click to Undo)
+          </button>
+          <button class="btn-action" onclick="nextLesson()">Next Lesson →</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="sidebar-content">
+      <h3>Course Content</h3>
+      <div id="lessons-list"></div>
+    </aside>
+  </div>
+
+  <!-- Global Footer Component Placeholder -->
+  <div id="footer"></div>
+
+  <script>
+    let lessons = [
+      { id: 1, title: '1. Introduction to SkillForge', duration: '12 mins', completed: true },
+      { id: 2, title: '2. HTML5 Elements & Structure', duration: '18 mins', completed: true },
+      { id: 3, title: '3. CSS3 Styling & Layouts', duration: '25 mins', completed: false },
+      { id: 4, title: '4. JavaScript Interactivity', duration: '30 mins', completed: false }
+    ];
+
+    let currentLessonId = 1;
+
+    function renderLessons() {
+      const container = document.getElementById('lessons-list');
+      container.innerHTML = lessons.map(l => `
+        <div class="lesson-item ${l.id === currentLessonId ? 'active' : ''} ${l.completed ? 'completed' : ''}" onclick="selectLesson(${l.id})">
+          <div class="lesson-info">
+            <span class="lesson-status-icon">${l.completed ? '✓' : '▶'}</span>
+            <span>${l.title}</span>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">${l.duration}</span>
+        </div>
+      `).join('');
+
+      const active = lessons.find(l => l.id === currentLessonId);
+      document.getElementById('video-title').textContent = active.title;
+      document.getElementById('video-duration').textContent = `Duration: ${active.duration}`;
+
+      const statusEl = document.getElementById('status-indicator');
+      const btnMark = document.getElementById('btn-toggle-mark');
+
+      if (active.completed) {
+        statusEl.textContent = '✓ Completed';
+        statusEl.style.color = 'var(--success)';
+        btnMark.textContent = '✓ Completed (Click to Undo)';
+      } else {
+        statusEl.textContent = '⏳ In Progress';
+        statusEl.style.color = 'var(--warning)';
+        btnMark.textContent = '✔ Mark as Completed';
+      }
+    }
+
+    function selectLesson(id) {
+      currentLessonId = id;
+      renderLessons();
+    }
+
+    function toggleCurrentLesson() {
+      const active = lessons.find(l => l.id === currentLessonId);
+      active.completed = !active.completed;
+      renderLessons();
+    }
+
+    function nextLesson() {
+      const currentIndex = lessons.findIndex(l => l.id === currentLessonId);
+      if (currentIndex < lessons.length - 1) {
+        currentLessonId = lessons[currentIndex + 1].id;
+        renderLessons();
+      } else {
+        alert('You have reached the end of the course module!');
+      }
+    }
+
+    renderLessons();
+  </script>
 </body>
 </html>

@@ -3,32 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillForge - Courses</title>
+    <title>SkillForge - Learn. Build. Grow.</title>
+    <link rel="stylesheet" href="login-style.css">
+    <link rel="stylesheet" href="courses-style.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">SkillForge</div>
-        <ul class="nav-links">
-            <li><a href="index.html">Courses</a></li>
-            <li><a href="login.html" class="btn">Login</a></li>
-        </ul>
-    </nav>
+    <div id="navbar-placeholder"></div>
 
-    <section class="section-container">
-        <h2>Course Catalog</h2>
-        <div class="course-grid">
-            <div class="course-card">
-                <h3>Web Development Basics</h3>
-                <p>Learn HTML, CSS, JavaScript & Figma</p>
-                <a href="login.html" class="btn">Enroll Now</a>
-            </div>
-            <div class="course-card">
-                <h3>UI/UX Design Essentials</h3>
-                <p>Master wireframing and interactive prototyping.</p>
-                <a href="login.html" class="btn">Enroll Now</a>
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Learn new skills. Track your progress. Get certified.</h1>
+            <p>SkillForge connects students with instructors through hands-on courses, quizzes, and real certificates.</p>
+            <div class="hero-actions">
+                <a href="#courses" class="btn hero-btn-primary nav-scroll-link" data-target="courses">Browse Courses</a>
+                <a href="register.html" class="btn hero-btn-secondary">Get Started</a>
             </div>
         </div>
     </section>
+
+    <!-- COURSES -->
+    <section class="section-container" id="courses">
+        <h2 class="page-title">Course Catalog</h2>
+        <p class="page-subtitle">Browse courses and start learning today.</p>
+
+        <p id="coursesError" class="error-text" hidden></p>
+
+        <div class="course-grid" id="courseGrid">
+            <div class="course-card skeleton"></div>
+            <div class="course-card skeleton"></div>
+            <div class="course-card skeleton"></div>
+        </div>
+        <div class="explore-all-wrap">
+        <a href="courses.html" class="btn hero-btn-secondary">Explore All Courses</a>
+    </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section-container about-section" id="about">
+        <h2 class="page-title">About SkillForge</h2>
+        <p class="page-subtitle">Why we built this platform</p>
+
+        <div class="about-grid">
+            <div class="card about-card">
+                <h3>For Students</h3>
+                <p>Enroll in courses that match your goals, then learn at your own pace through structured lessons. Track your progress lesson by lesson, pass end-of-course quizzes to lock in what you learned, and earn certificates you can show off to employers or peers.</p>
+            </div>
+            <div class="card about-card">
+                <h3>For Instructors</h3>
+                <p>Publish courses with a clear curriculum, build out lessons and quizzes, and watch your students learn and grow through the platform. SkillForge gives you the structure to teach and the insights to improve over time.</p>
+            </div>
+            <div class="card about-card">
+                <h3>How It Works</h3>
+                <p>Choose a course, work through each lesson in order, and test your knowledge with quizzes at the end. Once you complete the required lessons and pass the final quiz, you earn a certificate — a verifiable record of what you accomplished.</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="navbar.js"></script>
+    <script src="footer.js"></script>
+    <script src="courses.js"></script>
 </body>
 </html>

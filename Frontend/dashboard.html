@@ -1,38 +1,618 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillForge - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillForge - Dashboard</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --border: #334155;
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--accent); text-decoration: none; }
+    .nav-links { list-style: none; display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { color: var(--text-main); text-decoration: none; font-size: 0.95rem; }
+    .nav-links a:hover { color: var(--accent); }
+
+    .role-toggle {
+      background: var(--bg-dark);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+    }
+    .role-toggle button {
+      padding: 0.4rem 1rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .role-toggle button.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Layout */
+    .main-layout {
+      display: flex;
+      max-width: 1300px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      width: 100%;
+      gap: 1.8rem;
+      flex: 1;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      height: fit-content;
+    }
+    .sidebar-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .sidebar-menu li button {
+      width: 100%;
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: 0.2s;
+    }
+    .sidebar-menu li button:hover, .sidebar-menu li button.active {
+      background: rgba(79, 70, 229, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+    }
+
+    .page-title {
+      font-size: 1.6rem;
+      margin-bottom: 0.3rem;
+    }
+    .page-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.8rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Filter & Search Bar */
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.65rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: white;
+      outline: none;
+    }
+    .filter-select {
+      padding: 0.65rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: white;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Course Cards */
+    .course-row {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .badge-published { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
+    .badge-draft { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
+
+    /* Buttons & Forms */
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: white;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: var(--accent);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .stat-card h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .stat-card .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+
+    @media (max-width: 850px) {
+      .main-layout { flex-direction: column; }
+      .sidebar { width: 100%; }
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">SkillForge</div>
-        <ul class="nav-links">
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="index.html">Logout</a></li>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">SkillForge</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="player.html">Player</a></li>
+      <li>
+        <div class="role-toggle">
+          <button id="btn-student" onclick="switchRole('student')">Student</button>
+          <button id="btn-instructor" class="active" onclick="switchRole('instructor')">Instructor</button>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="main-layout">
+    
+    <aside class="sidebar">
+      <ul class="sidebar-menu" id="sidebar-tabs">
         </ul>
-    </nav>
+    </aside>
 
-    <section class="section-container">
-        <h2>Student Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Enrolled Courses</h3>
-                <p>Web Development Basics</p>
-                <a href="player.html" class="btn">Continue Learning</a>
-            </div>
-        </div>
+    <main class="content-area" id="content-view">
+      </main>
 
-        <h2 style="margin-top: 30px;">Instructor Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Analytics</h3>
-                <p>Total Students: 120</p>
-                <p>Active Courses: 3</p>
+  </div>
+
+  <script>
+    let currentRole = localStorage.getItem('userRole') || 'instructor';
+    let currentTab = 'all-courses';
+
+    // Mock initial courses data with Published / Unpublished status
+    let coursesData = [
+      { id: 1, title: 'Web Development Basics', category: 'Development', status: 'published', students: 28, rating: 4.8, progress: '85%' },
+      { id: 2, title: 'Full-Stack Node.js & MongoDB', category: 'Backend', status: 'published', students: 20, rating: 4.9, progress: '60%' },
+      { id: 3, title: 'Advanced Docker & Kubernetes Deployment', category: 'DevOps', status: 'unpublished', students: 0, rating: 0, progress: '0%' }
+    ];
+
+    function switchRole(role) {
+      currentRole = role;
+      localStorage.setItem('userRole', role);
+      document.getElementById('btn-student').classList.toggle('active', role === 'student');
+      document.getElementById('btn-instructor').classList.toggle('active', role === 'instructor');
+      currentTab = role === 'instructor' ? 'all-courses' : 'my-learning';
+      renderSidebar();
+      renderContent();
+    }
+
+    function renderSidebar() {
+      const menu = document.getElementById('sidebar-tabs');
+      if (currentRole === 'instructor') {
+        menu.innerHTML = `
+          <li><button class="${currentTab==='all-courses'?'active':''}" onclick="setTab('all-courses')">📚 All Courses</button></li>
+          <li><button class="${currentTab==='add-course'?'active':''}" onclick="setTab('add-course')">➕ Add New Course</button></li>
+          <li><button class="${currentTab==='update-course'?'active':''}" onclick="setTab('update-course')">✏️ Update Courses</button></li>
+          <li><button class="${currentTab==='progress'?'active':''}" onclick="setTab('progress')">📊 Course Progress</button></li>
+          <li><button class="${currentTab==='profile'?'active':''}" onclick="setTab('profile')">👤 Instructor Profile</button></li>
+        `;
+      } else {
+        menu.innerHTML = `
+          <li><button class="active" onclick="setTab('my-learning')">🎓 My Learning</button></li>
+          <li><button onclick="setTab('certificates')">🏆 Certificates</button></li>
+        `;
+      }
+    }
+
+    function setTab(tab) {
+      currentTab = tab;
+      renderSidebar();
+      renderContent();
+    }
+
+    function renderContent() {
+      const view = document.getElementById('content-view');
+
+      // INSTRUCTOR VIEWS
+      if (currentRole === 'instructor') {
+        
+        // 1. ALL COURSES (With Search & Status Filter: Published / Unpublished)
+        if (currentTab === 'all-courses') {
+          view.innerHTML = `
+            <h1 class="page-title">Manage All Courses</h1>
+            <p class="page-desc">Filter and manage all your published and unpublished course modules.</p>
+
+            <div class="filter-bar">
+              <input type="text" id="course-search" class="search-input" placeholder="Search by course title..." oninput="filterCourses()">
+              <select id="status-filter" class="filter-select" onchange="filterCourses()">
+                <option value="all">All Courses</option>
+                <option value="published">Published</option>
+                <option value="unpublished">Unpublished (Draft)</option>
+              </select>
             </div>
+
+            <div id="course-list-container"></div>
+          `;
+          filterCourses();
+        }
+
+        // 2. ADD NEW COURSE
+        else if (currentTab === 'add-course') {
+          view.innerHTML = `
+            <h1 class="page-title">Add New Course</h1>
+            <p class="page-desc">Create a new course curriculum and publish it for students.</p>
+
+            <form onsubmit="handleCreateCourse(event)">
+              <div class="form-group">
+                <label>Course Title</label>
+                <input type="text" id="new-title" placeholder="e.g. Master React & Redux Toolkit" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label>Category</label>
+                  <input type="text" id="new-category" placeholder="Web Development" required>
+                </div>
+                <div class="form-group">
+                  <label>Publish Status</label>
+                  <select id="new-status">
+                    <option value="published">Publish Immediately</option>
+                    <option value="unpublished">Save as Draft (Unpublished)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Course Description</label>
+                <textarea id="new-desc" rows="4" placeholder="Detail the course curriculum, modules, and prerequisites..." required></textarea>
+              </div>
+
+              <button type="submit" class="btn-primary">Create Course</button>
+            </form>
+          `;
+        }
+
+        // 3. UPDATE COURSES
+        else if (currentTab === 'update-course') {
+          view.innerHTML = `
+            <h1 class="page-title">Update Course</h1>
+            <p class="page-desc">Select an existing course to edit its content, lessons, or visibility status.</p>
+
+            <div class="form-group">
+              <label>Select Course to Update</label>
+              <select id="select-update" onchange="loadCourseToUpdate(this.value)">
+                ${coursesData.map(c => `<option value="${c.id}">${c.title} (${c.status})</option>`).join('')}
+              </select>
+            </div>
+
+            <form onsubmit="handleUpdateCourse(event)" id="update-form">
+              <div class="form-group">
+                <label>Update Title</label>
+                <input type="text" id="edit-title" value="${coursesData[0].title}" required>
+              </div>
+
+              <div class="form-group">
+                <label>Status</label>
+                <select id="edit-status">
+                  <option value="published" ${coursesData[0].status==='published'?'selected':''}>Published</option>
+                  <option value="unpublished" ${coursesData[0].status==='unpublished'?'selected':''}>Unpublished (Draft)</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+          `;
+        }
+
+        // 4. COURSE PROGRESS & ANALYTICS
+        else if (currentTab === 'progress') {
+          view.innerHTML = `
+            <h1 class="page-title">Courses Progress & Analytics</h1>
+            <p class="page-desc">Real-time overview of student engagement, completion rates, and active learners.</p>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <h4>Total Students</h4>
+                <div class="stat-number">48</div>
+              </div>
+              <div class="stat-card">
+                <h4>Avg Completion</h4>
+                <div class="stat-number">72.5%</div>
+              </div>
+              <div class="stat-card">
+                <h4>Certificates Awarded</h4>
+                <div class="stat-number">19</div>
+              </div>
+            </div>
+
+            <h3 style="margin-bottom: 1rem;">Per-Course Student Progress</h3>
+            ${coursesData.map(c => `
+              <div class="course-row">
+                <div style="flex: 1;">
+                  <h4>${c.title}</h4>
+                  <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">Enrolled: ${c.students} Students • Status: ${c.status.toUpperCase()}</p>
+                </div>
+                <div style="text-align: right;">
+                  <span style="color: var(--accent); font-weight: 700;">${c.progress} Completed</span>
+                </div>
+              </div>
+            `).join('')}
+          `;
+        }
+
+        // 5. INSTRUCTOR PROFILE
+        else if (currentTab === 'profile') {
+          view.innerHTML = `
+            <h1 class="page-title">Instructor Profile</h1>
+            <p class="page-desc">Manage your public bio, credentials, and teaching account details.</p>
+
+            <form onsubmit="event.preventDefault(); alert('Profile updated successfully!');">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" value="Dr. Sarah Jenkins" required>
+                </div>
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input type="email" value="sarah.jenkins@skillforge.com" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Headline / Expertise</label>
+                <input type="text" value="Lead Full-Stack Instructor & Software Architect">
+              </div>
+
+              <div class="form-group">
+                <label>Instructor Bio</label>
+                <textarea rows="4">Passionate educator with 8+ years building enterprise applications. Teaching full-stack architectures and web standards to help students transition into junior developers.</textarea>
+              </div>
+
+              <button type="submit" class="btn-primary">Update Profile</button>
+            </form>
+          `;
+        }
+
+      } 
+      // STUDENT VIEWS
+      else {
+        view.innerHTML = `
+          <h1 class="page-title">Student Dashboard</h1>
+          <p class="page-desc">Track your course progress, lessons, and earned credentials.</p>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h4>Enrolled Courses</h4>
+              <div class="stat-number">2</div>
+            </div>
+            <div class="stat-card">
+              <h4>Lessons Done</h4>
+              <div class="stat-number">8 / 12</div>
+            </div>
+            <div class="stat-card">
+              <h4>Certificates</h4>
+              <div class="stat-number">1</div>
+            </div>
+          </div>
+
+          <h3 style="margin: 1.5rem 0 1rem;">In-Progress Courses</h3>
+          <div class="course-row">
+            <div>
+              <h4>Web Development Basics</h4>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Progress: 75% Complete</p>
+            </div>
+            <a href="player.html" class="btn-primary" style="text-decoration:none;">Resume</a>
+          </div>
+
+          <div class="course-row">
+            <div>
+              <h4>UI/UX Design Essentials</h4>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Progress: 30% Complete</p>
+            </div>
+            <a href="player.html" class="btn-primary" style="text-decoration:none;">Resume</a>
+          </div>
+        `;
+      }
+    }
+
+    // Filter Courses Helper
+    function filterCourses() {
+      const search = (document.getElementById('course-search')?.value || '').toLowerCase();
+      const status = document.getElementById('status-filter')?.value || 'all';
+      const container = document.getElementById('course-list-container');
+      if (!container) return;
+
+      const filtered = coursesData.filter(c => {
+        const matchesSearch = c.title.toLowerCase().includes(search);
+        const matchesStatus = status === 'all' || c.status === status;
+        return matchesSearch && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No courses match your filter criteria.</p>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(c => `
+        <div class="course-row">
+          <div>
+            <span class="badge ${c.status === 'published' ? 'badge-published' : 'badge-draft'}">${c.status}</span>
+            <h3 style="font-size: 1.1rem; margin-top: 0.2rem;">${c.title}</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Category: ${c.category} • ${c.students} Active Students</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn-secondary" onclick="setTab('update-course')">Edit</button>
+            <button class="btn-primary" onclick="toggleStatus(${c.id})">${c.status === 'published' ? 'Unpublish' : 'Publish'}</button>
+          </div>
         </div>
-    </section>
+      `).join('');
+    }
+
+    function toggleStatus(id) {
+      const course = coursesData.find(c => c.id === id);
+      if (course) {
+        course.status = course.status === 'published' ? 'unpublished' : 'published';
+        filterCourses();
+      }
+    }
+
+    function handleCreateCourse(e) {
+      e.preventDefault();
+      const title = document.getElementById('new-title').value;
+      const category = document.getElementById('new-category').value;
+      const status = document.getElementById('new-status').value;
+
+      coursesData.push({
+        id: Date.now(),
+        title,
+        category,
+        status,
+        students: 0,
+        rating: 5.0,
+        progress: '0%'
+      });
+
+      alert('New course created successfully!');
+      setTab('all-courses');
+    }
+
+    function loadCourseToUpdate(id) {
+      const course = coursesData.find(c => c.id == id);
+      if (course) {
+        document.getElementById('edit-title').value = course.title;
+        document.getElementById('edit-status').value = course.status;
+      }
+    }
+
+    function handleUpdateCourse(e) {
+      e.preventDefault();
+      const id = document.getElementById('select-update').value;
+      const course = coursesData.find(c => c.id == id);
+      if (course) {
+        course.title = document.getElementById('edit-title').value;
+        course.status = document.getElementById('edit-status').value;
+        alert('Course updated successfully!');
+        setTab('all-courses');
+      }
+    }
+
+    // Init
+    switchRole(currentRole);
+  </script>
+
 </body>
 </html>
