@@ -1,38 +1,284 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillForge - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillForge - Dashboard & Certificates</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --border: #334155;
+      --radius: 10px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 2.5rem;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--text-main);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .dashboard-container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+      width: 100%;
+    }
+
+    .dashboard-header {
+      margin-bottom: 2rem;
+    }
+
+    .dashboard-header h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .dashboard-header p {
+      color: var(--text-muted);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+    }
+
+    .stat-card h4 {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .stat-number {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Enrolled Courses & Progress */
+    .section-title {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--text-main);
+    }
+
+    .course-progress-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .course-info {
+      flex: 1;
+    }
+
+    .course-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar-bg {
+      background: var(--bg-dark);
+      border-radius: 20px;
+      height: 8px;
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+      margin: 0.6rem 0;
+    }
+
+    .progress-bar-fill {
+      background: var(--accent);
+      height: 100%;
+      border-radius: 20px;
+    }
+
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Certificate Card */
+    .certificate-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cert-badge {
+      color: var(--success);
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+    }
+
+    @media (max-width: 768px) {
+      .course-progress-card, .certificate-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn-action {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">SkillForge</div>
-        <ul class="nav-links">
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="index.html">Logout</a></li>
-        </ul>
-    </nav>
 
-    <section class="section-container">
-        <h2>Student Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Enrolled Courses</h3>
-                <p>Web Development Basics</p>
-                <a href="player.html" class="btn">Continue Learning</a>
-            </div>
-        </div>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">SkillForge</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Courses</a></li>
+      <li><a href="player.html">Player</a></li>
+      <li><a href="dashboard.html" style="color: var(--accent);">Dashboard</a></li>
+    </ul>
+  </nav>
 
-        <h2 style="margin-top: 30px;">Instructor Dashboard</h2>
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Analytics</h3>
-                <p>Total Students: 120</p>
-                <p>Active Courses: 3</p>
-            </div>
+  <!-- Dashboard Main Container -->
+  <main class="dashboard-container">
+    
+    <header class="dashboard-header">
+      <h1>Student Dashboard</h1>
+      <p>Track your enrolled courses, weekly progress, and verified certificates.</p>
+    </header>
+
+    <!-- Stats Summary -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4>Enrolled Courses</h4>
+        <div class="stat-number">2</div>
+      </div>
+      <div class="stat-card">
+        <h4>Completed Lessons</h4>
+        <div class="stat-number">8 / 12</div>
+      </div>
+      <div class="stat-card">
+        <h4>Certificates Earned</h4>
+        <div class="stat-number">1</div>
+      </div>
+    </div>
+
+    <!-- Enrolled Courses Progress -->
+    <h2 class="section-title">In-Progress Courses</h2>
+    
+    <div class="course-progress-card">
+      <div class="course-info">
+        <h3>Web Development Basics</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Next: JavaScript Interactivity</p>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: 75%;"></div>
         </div>
-    </section>
+        <span style="font-size: 0.85rem; color: var(--accent);">75% Completed</span>
+      </div>
+      <a href="player.html" class="btn-action">Continue Lesson</a>
+    </div>
+
+    <div class="course-progress-card">
+      <div class="course-info">
+        <h3>UI/UX Design Essentials</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Next: Wireframing with Figma</p>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: 30%;"></div>
+        </div>
+        <span style="font-size: 0.85rem; color: var(--accent);">30% Completed</span>
+      </div>
+      <a href="player.html" class="btn-action">Continue Lesson</a>
+    </div>
+
+    <!-- Certificate Preview Section -->
+    <h2 class="section-title" style="margin-top: 2.5rem;">Earned Certificates</h2>
+    <div class="certificate-card">
+      <div>
+        <div class="cert-badge">✓ Verified & Issued</div>
+        <h3>Relational Database Design</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Completed on SkillForge</p>
+      </div>
+      <a href="#" class="btn-action" style="background: var(--accent); color: #0f172a; font-weight: 700;">View Certificate</a>
+    </div>
+
+  </main>
+
 </body>
 </html>
