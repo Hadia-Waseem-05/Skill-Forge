@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -27,20 +27,6 @@
       flex-direction: column;
     }
 
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: rgba(30, 41, 59, 0.85);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-    }
-    .logo { font-size: 1.4rem; font-weight: 700; color: var(--accent); text-decoration: none; }
-    .nav-links { list-style: none; display: flex; gap: 1.5rem; align-items: center; }
-    .nav-links a { color: var(--text-main); text-decoration: none; font-size: 0.95rem; }
-    .nav-links a:hover { color: var(--accent); }
-
     .player-layout {
       display: flex;
       max-width: 1300px;
@@ -51,7 +37,6 @@
       flex: 1;
     }
 
-    /* Video & Controls Area */
     .main-player-pane {
       flex: 1;
       display: flex;
@@ -112,7 +97,6 @@
       color: #0f172a;
     }
 
-    /* Course Sidebar */
     .sidebar-content {
       width: 320px;
       background: var(--bg-card);
@@ -175,29 +159,17 @@
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <a href="index.html" class="logo">SkillForge</a>
-    <ul class="nav-links">
-      <li><a href="index.html">Courses</a></li>
-      <li><a href="dashboard-student.html">Dashboard</a></li>
-      <li><a href="login.html">Logout</a></li>
-    </ul>
-  </nav>
+  <!-- Global Navbar Component Placeholder -->
+  <div id="navbar"></div>
 
   <div class="player-layout">
-    
-    <!-- Main Player Area -->
     <main class="main-player-pane">
-      
-      <!-- Video Screen -->
       <div class="video-screen">
         <div class="play-icon">▶</div>
         <h2 id="video-title">1. Introduction to SkillForge</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.4rem;" id="video-duration">Duration: 12 mins</p>
       </div>
 
-      <!-- Action & Manual Mark Bar -->
       <div class="player-actions-bar">
         <div>
           <span style="font-size: 0.85rem; color: var(--text-muted);">Current Status:</span>
@@ -211,16 +183,16 @@
           <button class="btn-action" onclick="nextLesson()">Next Lesson →</button>
         </div>
       </div>
-
     </main>
 
-    <!-- Sidebar: Course Content -->
     <aside class="sidebar-content">
       <h3>Course Content</h3>
       <div id="lessons-list"></div>
     </aside>
-
   </div>
+
+  <!-- Global Footer Component Placeholder -->
+  <div id="footer"></div>
 
   <script>
     let lessons = [
@@ -285,6 +257,5 @@
 
     renderLessons();
   </script>
-
 </body>
-</html>g
+</html>

@@ -28,20 +28,6 @@
       flex-direction: column;
     }
 
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: rgba(30, 41, 59, 0.85);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-    }
-    .logo { font-size: 1.4rem; font-weight: 700; color: var(--accent); text-decoration: none; }
-    .nav-links { list-style: none; display: flex; gap: 1.5rem; align-items: center; }
-    .nav-links a { color: var(--text-main); text-decoration: none; font-size: 0.95rem; }
-    .nav-links a:hover { color: var(--accent); }
-
     .main-layout {
       display: flex;
       max-width: 1300px;
@@ -212,15 +198,8 @@
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <a href="index.html" class="logo">SkillForge</a>
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="student-dashboard.html" style="color: var(--accent);">Student Area</a></li>
-      <li><a href="login.html" onclick="localStorage.clear();">Logout</a></li>
-    </ul>
-  </nav>
+  <!-- Global Navbar Component Placeholder -->
+  <div id="navbar"></div>
 
   <div class="main-layout">
     <aside class="sidebar">
@@ -234,6 +213,9 @@
 
     <main class="content-area" id="content-view"></main>
   </div>
+
+  <!-- Global Footer Component Placeholder -->
+  <div id="footer"></div>
 
   <script>
     let currentTab = 'student-profile';
