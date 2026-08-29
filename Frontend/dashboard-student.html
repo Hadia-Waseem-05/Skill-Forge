@@ -154,7 +154,6 @@
       font-size: 0.95rem;
       outline: none;
     }
-    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
 
     .progress-bar-bg {
       background: #020617;
@@ -198,14 +197,13 @@
 </head>
 <body>
 
-  <!-- Global Navbar Component Placeholder -->
   <div id="navbar"></div>
 
   <div class="main-layout">
     <aside class="sidebar">
       <ul class="sidebar-menu">
-        <li><button id="tab-profile" class="active" onclick="setTab('student-profile')">👤 My Profile</button></li>
-        <li><button id="tab-courses" onclick="setTab('my-courses')">📚 My Courses</button></li>
+        <li><button id="tab-profile" onclick="setTab('student-profile')">👤 My Profile</button></li>
+        <li><button id="tab-courses" class="active" onclick="setTab('my-courses')">📚 My Courses</button></li>
         <li><button id="tab-progress" onclick="setTab('progress-tracking')">📊 Progress Tracking</button></li>
         <li><button id="tab-quiz" onclick="setTab('quiz-cert')">🏆 Quiz & Certificates</button></li>
       </ul>
@@ -214,37 +212,59 @@
     <main class="content-area" id="content-view"></main>
   </div>
 
-  <!-- Global Footer Component Placeholder -->
   <div id="footer"></div>
 
-  <script>
-    let currentTab = 'student-profile';
-    let selectedCourseId = null;
-    let selectedLessonId = 1;
+  <script src="navbar.js"></script>
+  <script src="footer.js"></script>
 
-    let studentCourses = [
-      {
-        id: 101,
-        title: 'Web Development Basics',
-        description: 'Comprehensive introduction to HTML5, modern CSS3, and core JavaScript.',
-        lessons: [
-          { id: 1, title: '1. Introduction & Setup', duration: '12 mins', completed: true },
-          { id: 2, title: '2. HTML5 Structure & Semantic Tags', duration: '18 mins', completed: true },
-          { id: 3, title: '3. CSS3 Flexbox & Layouts', duration: '25 mins', completed: false },
-          { id: 4, title: '4. JavaScript DOM Manipulation', duration: '30 mins', completed: false }
-        ]
-      },
-      {
-        id: 102,
-        title: 'Full-Stack Node.js & Databases',
-        description: 'Build robust REST APIs, handle JWT authentication, and schema queries.',
-        lessons: [
-          { id: 1, title: '1. Node Architecture & Modules', duration: '15 mins', completed: true },
-          { id: 2, title: '2. Express Routing & Middleware', duration: '22 mins', completed: false },
-          { id: 3, title: '3. MongoDB CRUD Operations', duration: '35 mins', completed: false }
-        ]
+  <script>
+    const ENROLL_API = "http://localhost:5000/api/enrollments/";
+    let currentTab = 'my-courses';
+    let selectedCourseId = null;
+    let selectedLessonId = null;
+    let enrolledCourses = [];
+    let loading = true;
+
+    async function fetchStudentEnrollments() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+        return;
       }
-    ];
+
+      loading = true;
+      renderContent();
+
+      try {
+        const res = await fetch(ENROLL_API, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        const enrollments = data.data || data || [];
+        
+        enrolledCourses = enrollments.map(item => {
+          const course = item.course_id || item.course || item;
+          return {
+            id: course._id || course.id,
+            title: course.title || "Course Title",
+            description: course.description || "",
+            thumbnail: course.thumbnail,
+            lessons: course.lessons && course.lessons.length > 0 ? course.lessons : [
+              { id: 1, title: '1. Course Overview & Introduction', duration: '10 mins', completed: false },
+              { id: 2, title: '2. Core Principles & Setup', duration: '20 mins', completed: false },
+              { id: 3, title: '3. Hands-on Project Implementation', duration: '35 mins', completed: false }
+            ]
+          };
+        });
+      } catch (err) {
+        console.error("Enrollments fetch failed:", err);
+      } finally {
+        loading = false;
+        renderContent();
+      }
+    }
 
     function setTab(tab) {
       currentTab = tab;
@@ -260,26 +280,46 @@
     function renderContent() {
       const view = document.getElementById('content-view');
 
+      if (loading && currentTab === 'my-courses') {
+        view.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 3rem;">Loading your courses from server...</p>`;
+        return;
+      }
+
       if (currentTab === 'student-profile') {
+        const username = localStorage.getItem('username') || 'Student';
+        const userEmail = localStorage.getItem('email') || 'student@skillforge.com';
+
         view.innerHTML = `
           <h1 class="page-title">Student Profile</h1>
           <p class="page-desc">Manage your personal profile and learning track preferences.</p>
           <form onsubmit="event.preventDefault(); alert('Profile updated successfully!');">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group"><label>Full Name</label><input type="text" value="Mahnoor Amjad" required></div>
-              <div class="form-group"><label>Email Address</label><input type="email" value="mahnoor@example.com" required></div>
+              <div class="form-group"><label>Full Name</label><input type="text" value="${username}" required></div>
+              <div class="form-group"><label>Email Address</label><input type="email" value="${userEmail}" required></div>
             </div>
-            <div class="form-group"><label>Learning Track</label><input type="text" value="Frontend & Full-Stack Development"></div>
-            <div class="form-group"><label>Bio</label><textarea rows="3">Learning modern web architectures and frontend interfaces on SkillForge.</textarea></div>
+            <div class="form-group"><label>Target Track</label><input type="text" value="Full-Stack Web Engineering"></div>
+            <div class="form-group"><label>Bio</label><textarea rows="3">Learning on SkillForge platform.</textarea></div>
             <button type="submit" class="btn-primary">Save Changes</button>
           </form>
         `;
       } else if (currentTab === 'my-courses') {
+        if (!enrolledCourses.length) {
+          view.innerHTML = `
+            <h1 class="page-title">My Enrolled Courses</h1>
+            <p class="page-desc">Access your registered learning modules.</p>
+            <div class="card-item" style="text-align: center; padding: 3rem 1rem;">
+              <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1.2rem;">You are not enrolled in any course yet.</p>
+              <a href="courses.html" class="btn-primary">Enroll Now</a>
+            </div>
+          `;
+          return;
+        }
+
         if (!selectedCourseId) {
           view.innerHTML = `
             <h1 class="page-title">My Enrolled Courses</h1>
-            <p class="page-desc">Click any course to open description, lesson player, and manual completion buttons.</p>
-            ${studentCourses.map(course => {
+            <p class="page-desc">Click any course to view curriculum lessons and launch video modules.</p>
+            ${enrolledCourses.map(course => {
               const comp = course.lessons.filter(l => l.completed).length;
               const percent = Math.round((comp / course.lessons.length) * 100);
               return `
@@ -290,13 +330,13 @@
                     <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${percent}%;"></div></div>
                     <span style="font-size: 0.85rem; color: var(--accent);">${comp} of ${course.lessons.length} Lessons Finished (${percent}%)</span>
                   </div>
-                  <button class="btn-primary" onclick="openCourse(${course.id})">Open Course & Lessons</button>
+                  <button class="btn-primary" onclick="openCourse('${course.id}')">Open Course & Lessons</button>
                 </div>
               `;
             }).join('')}
           `;
         } else {
-          const course = studentCourses.find(c => c.id === selectedCourseId);
+          const course = enrolledCourses.find(c => c.id === selectedCourseId);
           const currentLesson = course.lessons.find(l => l.id === selectedLessonId) || course.lessons[0];
 
           view.innerHTML = `
@@ -316,7 +356,7 @@
                   ${currentLesson.completed ? '✓ Status: Completed' : '⏳ Status: In Progress'}
                 </div>
               </div>
-              <button class="btn-success" onclick="toggleComplete(${course.id}, ${currentLesson.id})">
+              <button class="btn-success" onclick="toggleComplete('${course.id}', ${currentLesson.id})">
                 ${currentLesson.completed ? '✓ Completed (Click to Undo)' : '✔ Mark as Completed'}
               </button>
             </div>
@@ -338,8 +378,8 @@
         }
       } else if (currentTab === 'progress-tracking') {
         let total = 0, done = 0;
-        studentCourses.forEach(c => { total += c.lessons.length; done += c.lessons.filter(l => l.completed).length; });
-        const overall = Math.round((done / total) * 100);
+        enrolledCourses.forEach(c => { total += c.lessons.length; done += c.lessons.filter(l => l.completed).length; });
+        const overall = total > 0 ? Math.round((done / total) * 100) : 0;
 
         view.innerHTML = `
           <h1 class="page-title">Progress Tracking</h1>
@@ -347,43 +387,35 @@
           <div class="stats-grid">
             <div class="stat-card"><h4>Overall Completion</h4><div class="stat-number">${overall}%</div></div>
             <div class="stat-card"><h4>Lessons Finished</h4><div class="stat-number">${done} / ${total}</div></div>
-            <div class="stat-card"><h4>Active Courses</h4><div class="stat-number">${studentCourses.length}</div></div>
+            <div class="stat-card"><h4>Active Courses</h4><div class="stat-number">${enrolledCourses.length}</div></div>
           </div>
-          <h3 style="margin: 1.5rem 0 1rem;">Course Progress Breakdown</h3>
-          ${studentCourses.map(c => {
-            const finished = c.lessons.filter(l => l.completed).length;
-            const p = Math.round((finished / c.lessons.length) * 100);
-            return `
-              <div class="card-item">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
-                  <strong>${c.title}</strong><span style="color: var(--accent); font-weight: 600;">${p}%</span>
+          ${enrolledCourses.length ? `
+            <h3 style="margin: 1.5rem 0 1rem;">Course Progress Breakdown</h3>
+            ${enrolledCourses.map(c => {
+              const finished = c.lessons.filter(l => l.completed).length;
+              const p = Math.round((finished / c.lessons.length) * 100);
+              return `
+                <div class="card-item">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                    <strong>${c.title}</strong><span style="color: var(--accent); font-weight: 600;">${p}%</span>
+                  </div>
+                  <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${p}%;"></div></div>
+                  <small style="color: var(--text-muted);">${finished} of ${c.lessons.length} lessons finished</small>
                 </div>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${p}%;"></div></div>
-                <small style="color: var(--text-muted);">${finished} of ${c.lessons.length} lessons finished</small>
-              </div>
-            `;
-          }).join('')}
+              `;
+            }).join('')}
+          ` : '<p style="color:var(--text-muted);">Enroll in a course to view detailed milestone analytics.</p>'}
         `;
       } else if (currentTab === 'quiz-cert') {
         view.innerHTML = `
           <h1 class="page-title">Quizzes & Certifications</h1>
           <p class="page-desc">Complete knowledge checks and claim your verified certificates.</p>
-          <h3 style="margin-bottom: 1rem;">Assessment Quiz</h3>
-          <div class="card-item" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="card-item" style="display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;">
             <div>
-              <h4>Web Development Basics: Comprehensive Quiz</h4>
+              <h4>Course Knowledge Assessment</h4>
               <p style="color: var(--text-muted); font-size: 0.85rem;">10 Questions • 15 Minutes • Passing Score: 80%</p>
             </div>
             <a href="player.html" class="btn-primary">Start Quiz</a>
-          </div>
-          <h3 style="margin: 2rem 0 1rem;">Earned Certificates</h3>
-          <div class="card-item" style="border-color: var(--accent); background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <span style="color: var(--success); font-weight: 700; font-size: 0.85rem;">✓ VERIFIED & ISSUED</span>
-              <h4 style="font-size: 1.15rem; margin: 0.3rem 0;">Web Development Fundamentals</h4>
-              <p style="color: var(--text-muted); font-size: 0.85rem;">SkillForge Verified Completion</p>
-            </div>
-            <button class="btn-primary" onclick="alert('Downloading Certificate PDF...')">Download Certificate</button>
           </div>
         `;
       }
@@ -392,14 +424,14 @@
     function openCourse(id) { selectedCourseId = id; selectedLessonId = 1; renderContent(); }
     function playLesson(id) { selectedLessonId = id; renderContent(); }
     function toggleComplete(cId, lId) {
-      const course = studentCourses.find(c => c.id === cId);
+      const course = enrolledCourses.find(c => c.id === cId);
       if (course) {
         const lesson = course.lessons.find(l => l.id === lId);
         if (lesson) { lesson.completed = !lesson.completed; renderContent(); }
       }
     }
 
-    renderContent();
+    fetchStudentEnrollments();
   </script>
 </body>
 </html>

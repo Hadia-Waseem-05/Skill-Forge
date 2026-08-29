@@ -166,7 +166,6 @@
 </head>
 <body>
 
-  <!-- Global Navbar Component Placeholder -->
   <div id="navbar"></div>
 
   <div class="main-layout">
@@ -183,17 +182,51 @@
     <main class="content-area" id="content-view"></main>
   </div>
 
-  <!-- Global Footer Component Placeholder -->
   <div id="footer"></div>
 
-  <script>
-    let currentTab = 'all-courses';
+  <script src="navbar.js"></script>
+  <script src="footer.js"></script>
 
-    let instructorCourses = [
-      { id: 1, title: 'Web Development Basics', category: 'Development', status: 'published', students: 28, progress: '85%' },
-      { id: 2, title: 'Full-Stack Node.js & MongoDB', category: 'Backend', status: 'published', students: 20, progress: '60%' },
-      { id: 3, title: 'Advanced Docker & Kubernetes Deployment', category: 'DevOps', status: 'unpublished', students: 0, progress: '0%' }
-    ];
+  <script>
+    const COURSES_API = "http://localhost:5000/api/courses/";
+    let currentTab = 'all-courses';
+    let instructorCourses = [];
+    let loading = true;
+
+    async function fetchInstructorCourses() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      loading = true;
+      renderContent();
+
+      try {
+        const res = await fetch(COURSES_API, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        const all = data.data || data || [];
+        
+        instructorCourses = all.map(c => ({
+          id: c._id || c.id,
+          title: c.title || "Untitled Course",
+          category: c.category || "General",
+          description: c.description || "",
+          status: c.status || "published",
+          students: c.studentsCount || 0
+        }));
+      } catch (err) {
+        console.error("Instructor courses fetch failed:", err);
+      } finally {
+        loading = false;
+        renderContent();
+      }
+    }
 
     function setTab(tab) {
       currentTab = tab;
@@ -208,6 +241,11 @@
 
     function renderContent() {
       const view = document.getElementById('content-view');
+
+      if (loading && currentTab === 'all-courses') {
+        view.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 3rem;">Loading instructor courses from server...</p>`;
+        return;
+      }
 
       if (currentTab === 'all-courses') {
         view.innerHTML = `
@@ -231,7 +269,7 @@
           <h1 class="page-title">Add New Course</h1>
           <p class="page-desc">Create a new course curriculum and publish it for students.</p>
           <form onsubmit="handleCreateCourse(event)">
-            <div class="form-group"><label>Course Title</label><input type="text" id="new-title" placeholder="e.g. Master React & Redux" required></div>
+            <div class="form-group"><label>Course Title</label><input type="text" id="new-title" placeholder="e.g. Master React & Node.js" required></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="form-group"><label>Category</label><input type="text" id="new-category" placeholder="Web Development" required></div>
               <div class="form-group">
@@ -243,57 +281,61 @@
               </div>
             </div>
             <div class="form-group"><label>Description</label><textarea id="new-desc" rows="3" placeholder="Course outline..." required></textarea></div>
-            <button type="submit" class="btn-primary">Create Course</button>
+            <button type="submit" class="btn-primary" id="btn-create">Create Course</button>
           </form>
         `;
       } else if (currentTab === 'update-course') {
         view.innerHTML = `
           <h1 class="page-title">Update Course</h1>
           <p class="page-desc">Modify existing course content and visibility.</p>
-          <form onsubmit="event.preventDefault(); alert('Course details updated successfully!'); setTab('all-courses');">
-            <div class="form-group">
-              <label>Select Course</label>
-              <select>${instructorCourses.map(c => `<option>${c.title} (${c.status})</option>`).join('')}</select>
-            </div>
-            <div class="form-group"><label>Update Title</label><input type="text" value="${instructorCourses[0].title}"></div>
-            <div class="form-group">
-              <label>Status</label>
-              <select><option value="published">Published</option><option value="unpublished">Unpublished</option></select>
-            </div>
-            <button type="submit" class="btn-primary">Save Changes</button>
-          </form>
+          ${instructorCourses.length === 0 ? '<p style="color:var(--text-muted);">No courses available to update. Please add a course first.</p>' : `
+            <form onsubmit="event.preventDefault(); alert('Course updated successfully!'); setTab('all-courses');">
+              <div class="form-group">
+                <label>Select Course</label>
+                <select>${instructorCourses.map(c => `<option>${c.title} (${c.status})</option>`).join('')}</select>
+              </div>
+              <div class="form-group"><label>Update Title</label><input type="text" value="${instructorCourses[0]?.title || ''}"></div>
+              <div class="form-group">
+                <label>Status</label>
+                <select><option value="published">Published</option><option value="unpublished">Unpublished</option></select>
+              </div>
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+          `}
         `;
       } else if (currentTab === 'progress') {
         view.innerHTML = `
           <h1 class="page-title">Courses Progress & Analytics</h1>
           <p class="page-desc">Student enrollment and completion rate analytics.</p>
           <div class="stats-grid">
-            <div class="stat-card"><h4>Total Students</h4><div class="stat-number">48</div></div>
-            <div class="stat-card"><h4>Avg Completion</h4><div class="stat-number">72.5%</div></div>
-            <div class="stat-card"><h4>Certificates Issued</h4><div class="stat-number">19</div></div>
+            <div class="stat-card"><h4>Total Created Courses</h4><div class="stat-number">${instructorCourses.length}</div></div>
+            <div class="stat-card"><h4>Active Instructors</h4><div class="stat-number">1</div></div>
           </div>
-          <h3 style="margin-bottom: 1rem;">Course Enrollment Stats</h3>
+          <h3 style="margin-bottom: 1rem;">Created Courses Overview</h3>
           ${instructorCourses.map(c => `
             <div class="card-item" style="display:flex; justify-content:space-between; align-items:center;">
               <div>
                 <strong>${c.title}</strong>
-                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.2rem;">${c.students} Active Learners • Status: ${c.status.toUpperCase()}</p>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.2rem;">Status: ${c.status.toUpperCase()}</p>
               </div>
-              <span style="color:var(--accent); font-weight:700;">${c.progress} Completed</span>
+              <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
             </div>
           `).join('')}
         `;
       } else if (currentTab === 'profile') {
+        const username = localStorage.getItem('username') || 'Instructor';
+        const userEmail = localStorage.getItem('email') || 'instructor@skillforge.com';
+
         view.innerHTML = `
           <h1 class="page-title">Instructor Profile</h1>
           <p class="page-desc">Manage your public bio and teaching credentials.</p>
           <form onsubmit="event.preventDefault(); alert('Instructor profile saved!');">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group"><label>Full Name</label><input type="text" value="Dr. Sarah Jenkins"></div>
-              <div class="form-group"><label>Email Address</label><input type="email" value="sarah.jenkins@skillforge.com"></div>
+              <div class="form-group"><label>Full Name</label><input type="text" value="${username}" required></div>
+              <div class="form-group"><label>Email Address</label><input type="email" value="${userEmail}" required></div>
             </div>
-            <div class="form-group"><label>Headline</label><input type="text" value="Lead Full-Stack Instructor & Software Architect"></div>
-            <div class="form-group"><label>Bio</label><textarea rows="4">Passionate educator with 8+ years building enterprise applications on modern web stacks.</textarea></div>
+            <div class="form-group"><label>Headline</label><input type="text" value="Senior Web Development Instructor"></div>
+            <div class="form-group"><label>Bio</label><textarea rows="4">Delivering quality programming courses on SkillForge.</textarea></div>
             <button type="submit" class="btn-primary">Save Profile</button>
           </form>
         `;
@@ -307,13 +349,13 @@
       if (!container) return;
 
       const filtered = instructorCourses.filter(c => {
-        const matchesSearch = c.title.toLowerCase().includes(search);
+        const matchesSearch = (c.title || '').toLowerCase().includes(search);
         const matchesStatus = status === 'all' || c.status === status;
         return matchesSearch && matchesStatus;
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No courses match your filter.</p>`;
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No courses available matching criteria.</p>`;
         return;
       }
 
@@ -322,33 +364,51 @@
           <div>
             <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
             <h3 style="margin-top:0.3rem;">${c.title}</h3>
-            <p style="color:var(--text-muted); font-size:0.85rem;">Category: ${c.category} • ${c.students} Students</p>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Category: ${c.category}</p>
           </div>
           <div style="display:flex; gap:0.5rem;">
             <button class="btn-secondary" onclick="setTab('update-course')">Edit</button>
-            <button class="btn-primary" onclick="c.status=c.status==='published'?'unpublished':'published'; filterCourses();">
-              ${c.status==='published'?'Unpublish':'Publish'}
-            </button>
           </div>
         </div>
       `).join('');
     }
 
-    function handleCreateCourse(e) {
+    async function handleCreateCourse(e) {
       e.preventDefault();
-      instructorCourses.push({
-        id: Date.now(),
-        title: document.getElementById('new-title').value,
-        category: document.getElementById('new-category').value,
-        status: document.getElementById('new-status').value,
-        students: 0,
-        progress: '0%'
-      });
-      alert('Course created successfully!');
-      setTab('all-courses');
+      const token = localStorage.getItem("token");
+      const title = document.getElementById('new-title').value;
+      const category = document.getElementById('new-category').value;
+      const status = document.getElementById('new-status').value;
+      const description = document.getElementById('new-desc').value;
+      const btn = document.getElementById('btn-create');
+
+      btn.disabled = true;
+      btn.textContent = "Creating...";
+
+      try {
+        const res = await fetch(COURSES_API, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ title, category, status, description })
+        });
+
+        if (!res.ok) throw new Error("Failed to create course");
+
+        alert("Course created successfully!");
+        fetchInstructorCourses();
+        setTab('all-courses');
+      } catch (err) {
+        alert(err.message || "Error creating course");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Create Course";
+      }
     }
 
-    renderContent();
+    fetchInstructorCourses();
   </script>
 </body>
 </html>
