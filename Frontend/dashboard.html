@@ -245,6 +245,17 @@
     .stat-card h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
     .stat-card .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
 
+    .success-text {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      font-size: 13px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      text-align: center;
+      border: 1px solid var(--success);
+    }
+
     @media (max-width: 850px) {
       .main-layout { flex-direction: column; }
       .sidebar { width: 100%; }
@@ -460,7 +471,7 @@
             <h1 class="page-title">Instructor Profile</h1>
             <p class="page-desc">Manage your public bio, credentials, and teaching account details.</p>
 
-            <form onsubmit="event.preventDefault(); alert('Profile updated successfully!');">
+            <form onsubmit="handleProfileSave(event)">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                   <label>Full Name</label>
@@ -482,6 +493,7 @@
                 <textarea rows="4">Passionate educator with 8+ years building enterprise applications. Teaching full-stack architectures and web standards to help students transition into junior developers.</textarea>
               </div>
 
+              <p id="profileSuccess" class="success-text" hidden></p>
               <button type="submit" class="btn-primary">Update Profile</button>
             </form>
           `;
@@ -586,7 +598,11 @@
         progress: '0%'
       });
 
-      alert('New course created successfully!');
+      const successEl = document.createElement('p');
+      successEl.className = 'success-text';
+      successEl.textContent = 'New course created successfully!';
+      const view = document.getElementById('content-view');
+      if (view) view.insertBefore(successEl, view.firstChild);
       setTab('all-courses');
     }
 
@@ -605,8 +621,21 @@
       if (course) {
         course.title = document.getElementById('edit-title').value;
         course.status = document.getElementById('edit-status').value;
-        alert('Course updated successfully!');
+        const successEl = document.createElement('p');
+        successEl.className = 'success-text';
+        successEl.textContent = 'Course updated successfully!';
+        const view = document.getElementById('content-view');
+        if (view) view.insertBefore(successEl, view.firstChild);
         setTab('all-courses');
+      }
+    }
+
+    function handleProfileSave(e) {
+      e.preventDefault();
+      const successEl = document.getElementById("profileSuccess");
+      if (successEl) {
+        successEl.textContent = "Profile updated successfully!";
+        successEl.hidden = false;
       }
     }
 

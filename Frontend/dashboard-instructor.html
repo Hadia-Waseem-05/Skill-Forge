@@ -68,6 +68,16 @@
       border: 1px solid var(--accent);
     }
 
+    .sidebar-delete-wrap {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-delete-btn {
+      width: 100%;
+    }
+
     .content-area {
       flex: 1;
       background: var(--bg-card);
@@ -158,6 +168,73 @@
     .badge-published { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
     .badge-draft { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
 
+    .success-text {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      font-size: 13px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      text-align: center;
+      border: 1px solid var(--success);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+    }
+
+    .modal-box h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .modal-box p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .btn-danger {
+      background: #DC2626;
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-danger:hover {
+      background: #B91C1C;
+    }
+
     @media (max-width: 850px) {
       .main-layout { flex-direction: column; }
       .sidebar { width: 100%; }
@@ -177,6 +254,10 @@
         <li><button id="tab-prog" onclick="setTab('progress')">📊 Course Progress</button></li>
         <li><button id="tab-prof" onclick="setTab('profile')">👤 Instructor Profile</button></li>
       </ul>
+
+      <div class="sidebar-delete-wrap">
+        <button class="btn-danger sidebar-delete-btn" onclick="openDeleteModal()">🗑 Delete Account</button>
+      </div>
     </aside>
 
     <main class="content-area" id="content-view"></main>
@@ -186,6 +267,7 @@
 
   <script src="navbar.js"></script>
   <script src="footer.js"></script>
+  <script src="enrollments.js"></script>
 
   <script>
     const COURSES_API = "http://localhost:5000/api/courses/";
@@ -289,18 +371,19 @@
           <h1 class="page-title">Update Course</h1>
           <p class="page-desc">Modify existing course content and visibility.</p>
           ${instructorCourses.length === 0 ? '<p style="color:var(--text-muted);">No courses available to update. Please add a course first.</p>' : `
-            <form onsubmit="event.preventDefault(); alert('Course updated successfully!'); setTab('all-courses');">
-              <div class="form-group">
-                <label>Select Course</label>
-                <select>${instructorCourses.map(c => `<option>${c.title} (${c.status})</option>`).join('')}</select>
-              </div>
-              <div class="form-group"><label>Update Title</label><input type="text" value="${instructorCourses[0]?.title || ''}"></div>
-              <div class="form-group">
-                <label>Status</label>
-                <select><option value="published">Published</option><option value="unpublished">Unpublished</option></select>
-              </div>
-              <button type="submit" class="btn-primary">Save Changes</button>
-            </form>
+             <form onsubmit="handleUpdateCourse(event)">
+               <div class="form-group">
+                 <label>Select Course</label>
+                 <select id="select-update">${instructorCourses.map(c => `<option value="${c.id}">${c.title} (${c.status})</option>`).join('')}</select>
+               </div>
+               <div class="form-group"><label>Update Title</label><input type="text" id="edit-title" value="${instructorCourses[0]?.title || ''}"></div>
+               <div class="form-group">
+                 <label>Status</label>
+                 <select id="edit-status"><option value="published">Published</option><option value="unpublished">Unpublished</option></select>
+               </div>
+               <p id="updateSuccess" class="success-text" hidden></p>
+               <button type="submit" class="btn-primary">Save Changes</button>
+             </form>
           `}
         `;
       } else if (currentTab === 'progress') {
@@ -312,24 +395,19 @@
             <div class="stat-card"><h4>Active Instructors</h4><div class="stat-number">1</div></div>
           </div>
           <h3 style="margin-bottom: 1rem;">Created Courses Overview</h3>
-          ${instructorCourses.map(c => `
-            <div class="card-item" style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <strong>${c.title}</strong>
-                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.2rem;">Status: ${c.status.toUpperCase()}</p>
-              </div>
-              <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
-            </div>
-          `).join('')}
+          <div id="instructor-progress-list"></div>
         `;
+        renderInstructorProgress();
       } else if (currentTab === 'profile') {
         const username = localStorage.getItem('username') || 'Instructor';
         const userEmail = localStorage.getItem('email') || 'instructor@skillforge.com';
+        const userId = localStorage.getItem('userId');
 
         view.innerHTML = `
           <h1 class="page-title">Instructor Profile</h1>
           <p class="page-desc">Manage your public bio and teaching credentials.</p>
-          <form onsubmit="event.preventDefault(); alert('Instructor profile saved!');">
+          <p id="profileSuccess" class="success-text" hidden></p>
+          <form onsubmit="handleInstructorProfileSave(event)">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="form-group"><label>Full Name</label><input type="text" value="${username}" required></div>
               <div class="form-group"><label>Email Address</label><input type="email" value="${userEmail}" required></div>
@@ -397,18 +475,151 @@
 
         if (!res.ok) throw new Error("Failed to create course");
 
-        alert("Course created successfully!");
+        const view = document.getElementById('content-view');
+        const successEl = document.createElement('p');
+        successEl.className = 'success-text';
+        successEl.textContent = 'Course created successfully!';
+        view.insertBefore(successEl, view.firstChild);
+
         fetchInstructorCourses();
         setTab('all-courses');
       } catch (err) {
-        alert(err.message || "Error creating course");
+        const view = document.getElementById('content-view');
+        const errorEl = document.createElement('p');
+        errorEl.className = 'error-text';
+        errorEl.textContent = err.message || "Error creating course";
+        view.insertBefore(errorEl, view.firstChild);
       } finally {
         btn.disabled = false;
         btn.textContent = "Create Course";
       }
     }
 
+    async function renderInstructorProgress() {
+      const container = document.getElementById('instructor-progress-list');
+      if (!container || !instructorCourses.length) {
+        if (container) container.innerHTML = '<p style="color:var(--text-muted);">No courses yet.</p>';
+        return;
+      }
+
+      container.innerHTML = '<p style="color:var(--text-muted);">Loading progress...</p>';
+
+      try {
+        const results = await Promise.all(
+          instructorCourses.map(async (c) => {
+            const students = await getStudentsProgressForCourse(c.id).catch(() => []);
+            return { ...c, students };
+          })
+        );
+
+        container.innerHTML = results.map((c) => {
+          const studentRows = c.students.map((s) => `
+            <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div>
+                <strong>${s.student?.name || 'Student'}</strong>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.2rem;">${s.student?.email || ''}</p>
+              </div>
+              <div style="text-align:right;">
+                <span style="color:var(--accent); font-weight:600;">${s.percentage}%</span>
+                <p style="color:var(--text-muted); font-size:0.8rem;">${s.completed_lessons}/${s.total_lessons} lessons</p>
+              </div>
+            </div>
+          `).join('');
+
+          return `
+            <div class="card-item" style="margin-bottom: 1.5rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                <strong>${c.title}</strong>
+                <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
+              </div>
+              ${studentRows || '<p style="color:var(--text-muted); font-size:0.85rem;">No enrolled students yet.</p>'}
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = '<p style="color:var(--text-muted);">Failed to load progress.</p>';
+      }
+    }
+
+    function handleInstructorProfileSave(e) {
+      e.preventDefault();
+      const successEl = document.getElementById("profileSuccess");
+      successEl.textContent = "Instructor profile saved!";
+      successEl.hidden = false;
+    }
+
+    function handleUpdateCourse(e) {
+      e.preventDefault();
+      const select = document.getElementById('select-update');
+      const titleInput = document.getElementById('edit-title');
+      const statusInput = document.getElementById('edit-status');
+      if (!select || !titleInput) return;
+
+      const selectedOption = select.options[select.selectedIndex];
+      const courseId = select.value;
+      const course = instructorCourses.find(c => c.id == courseId);
+      if (course) {
+        course.title = titleInput.value;
+        course.status = statusInput.value;
+        const successEl = document.getElementById("updateSuccess");
+        if (successEl) {
+          successEl.textContent = "Course updated successfully!";
+          successEl.hidden = false;
+        }
+        fetchInstructorCourses();
+        setTab('all-courses');
+      }
+    }
+
+    function openDeleteModal() {
+      document.getElementById("deleteModal").hidden = false;
+    }
+
+    function closeDeleteModal() {
+      document.getElementById("deleteModal").hidden = true;
+    }
+
+    async function confirmDeleteAccount() {
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      try {
+        await deleteAccount(userId);
+        closeDeleteModal();
+        logoutUser();
+        window.location.href = "index.html";
+      } catch (err) {
+        const view = document.getElementById('content-view');
+        const errorEl = document.createElement('p');
+        errorEl.className = 'error-text';
+        errorEl.textContent = err.message || "Failed to delete account.";
+        if (view) view.insertBefore(errorEl, view.firstChild);
+      }
+    }
+
+    function logoutUser() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("name");
+      localStorage.removeItem("avatar");
+      localStorage.removeItem("username");
+      localStorage.removeItem("email");
+    }
+
     fetchInstructorCourses();
   </script>
+
+  <div id="deleteModal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <h3>Delete Account</h3>
+      <p>This action is permanent and cannot be undone. All your data will be removed.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" onclick="confirmDeleteAccount()">Delete Account</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

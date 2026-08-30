@@ -1,5 +1,4 @@
 const API_COURSES = "http://localhost:5000/api/courses";
-const API_ENROLLMENTS = "http://localhost:5000/api/enrollments";
 
 function getCourseIdFromUrl() {
     return new URLSearchParams(window.location.search).get("id");
@@ -14,6 +13,30 @@ function showCourseError(message) {
 
 function hideCourseError() {
     document.getElementById("courseErrorMsg").hidden = true;
+}
+
+let currentCourse = null;
+
+function getCourseTitle() {
+    return currentCourse?.title || "this course";
+}
+
+function showEnrollMessage(type) {
+    const msg = document.getElementById("enrollMessage");
+    msg.className = `enroll-message ${type}`;
+    msg.hidden = false;
+    if (type === "success") {
+        msg.innerHTML = `Congrats! You are enrolled in <strong>${getCourseTitle()}</strong>.`;
+    } else if (type === "auth") {
+        msg.innerHTML = `Please log in to enroll in this course. <a href="login.html" class="enroll-message-link">Log In</a>`;
+    } else {
+        msg.innerHTML = `Instructors cannot enroll in courses.`;
+    }
+    msg.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function hideEnrollMessage() {
+    document.getElementById("enrollMessage").hidden = true;
 }
 
 async function loadCourse() {
@@ -45,6 +68,7 @@ async function loadCourse() {
 }
 
 function renderCourse(course, lessons) {
+    currentCourse = course;
     document.title = `${course.title} - SkillForge`;
 
     const thumbnail = document.getElementById("courseThumbnail");
@@ -78,15 +102,13 @@ async function checkEnrollmentStatus(courseId) {
     if (!token || role !== "student") return;
 
     try {
-        const res = await fetch(`${API_ENROLLMENTS}/my`, {
-            headers: { Authorization: `Bearer ${token}` },
+        const enrollments = await getMyEnrollments();
+        const alreadyEnrolled = enrollments.some((e) => {
+            const cid = e.course_id?._id || e.course_id;
+            return cid && cid.toString() === courseId;
         });
-        const data = await res.json();
 
-        if (res.ok) {
-            const alreadyEnrolled = data.data.some((e) => e.course_id?._id === courseId);
-            if (alreadyEnrolled) setEnrolledState();
-        }
+        if (alreadyEnrolled) setEnrolledState();
     } catch (err) {
         console.error(err);
     }
@@ -94,6 +116,7 @@ async function checkEnrollmentStatus(courseId) {
 
 function setEnrolledState() {
     const enrollBtn = document.getElementById("enrollBtn");
+    if (!enrollBtn) return;
     enrollBtn.textContent = "Enrolled";
     enrollBtn.classList.remove("accent-btn");
     enrollBtn.classList.add("enrolled-btn");
@@ -106,18 +129,19 @@ function initEnrollButton() {
 
     enrollBtn.addEventListener("click", async () => {
         hideCourseError();
+        hideEnrollMessage();
 
         const token = localStorage.getItem("token");
         const role = localStorage.getItem("role");
         const courseId = getCourseIdFromUrl();
 
         if (!token) {
-            showCourseError("Please login to enroll in this course.");
+            showEnrollMessage("auth");
             return;
         }
 
         if (role === "instructor") {
-            showCourseError("Instructors can't enroll in a course.");
+            showEnrollMessage("error");
             return;
         }
 
@@ -125,27 +149,12 @@ function initEnrollButton() {
         enrollBtn.textContent = "Enrolling...";
 
         try {
-            const res = await fetch(API_ENROLLMENTS, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ course_id: courseId }),
-            });
-            const data = await res.json();
-
-            if (!res.ok) {
-                showCourseError(data.message || "Could not enroll in this course.");
-                enrollBtn.disabled = false;
-                enrollBtn.textContent = "Enroll Now";
-                return;
-            }
-
+            await enrollInCourse(courseId);
+            showEnrollMessage("success");
             setEnrolledState();
         } catch (err) {
             console.error(err);
-            showCourseError("Something went wrong. Please try again.");
+            showEnrollMessage("error");
             enrollBtn.disabled = false;
             enrollBtn.textContent = "Enroll Now";
         }
