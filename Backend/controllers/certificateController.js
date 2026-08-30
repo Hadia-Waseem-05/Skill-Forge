@@ -1,21 +1,22 @@
 import PDFDocument from "pdfkit";
-import QuizResult from "../models/QuizResult.js";
+import QuizAttempt from "../models/QuizAttempt.js";
 
 export const generateCertificate = async (req, res) => {
     try {
-        const { studentName, courseName, courseId } = req.body;
+        const { studentName, courseName, course_id } = req.body;
 
-        if (!studentName || !courseName || !courseId) {
-            return res.status(400).json({ message: "Student name, course name, and course ID are required" });
+        if (!studentName || !courseName || !course_id) {
+            return res.status(400).json({ message: "Student name, course name, and course_id are required" });
         }
 
         // Check karo ke student ne is course ka quiz pass kiya hai ya nahi
-        const result = await QuizResult.findOne({
+        const result = await QuizAttempt.findOne({
             student_id: req.user.id,
-            course_id: courseId,
+            course_id: course_id,
+            passed: true,
         });
 
-        if (!result || !result.passed) {
+        if (!result) {
             return res.status(403).json({
                 status: false,
                 message: "You must pass the quiz for this course before getting a certificate",
