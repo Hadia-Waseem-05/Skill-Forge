@@ -1,3 +1,5 @@
+export const PASSING_PERCENTAGE = 0.5;
+
 function calculateScore(userAnswers, correctAnswers) {
   let score = 0;
 

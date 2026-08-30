@@ -239,6 +239,81 @@
       .sidebar.open .sidebar-menu { display: flex; }
       .sidebar.open .sidebar-delete-wrap { display: block; }
     }
+
+    /* Quiz modal */
+    #quizModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #quizModal.hidden { display: none; }
+    #quizModalBox {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      width: 95%;
+      max-width: 600px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #quizHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    #quizTimer {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .quiz-timer-running { color: var(--accent); }
+    .quiz-timer-warning { color: var(--danger, #ef4444); }
+    #quizBody {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    #quizOptions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .quiz-option-btn {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .quiz-option-btn:hover {
+      background: rgba(67, 56, 202, 0.08);
+      border-color: var(--primary);
+    }
+    #quizProgressWrap {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #quizProgressBar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
 </style>
 </head>
 <body>
@@ -280,6 +355,7 @@
     let viewMode = 'list';
     let pendingComplete = null;
     let loading = true;
+    let quizState = null;
 
     function escapeAttr(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -502,18 +578,13 @@
         `;
       } else if (currentTab === 'quiz-cert') {
         view.innerHTML = `
-          <h1 class="page-title">Quizzes & Certifications</h1>
-          <p class="page-desc">Complete the course assessment to mark all lessons finished and claim your certificate.</p>
-          ${enrolledCourses.length ? enrolledCourses.map(c => `
-            <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-              <div>
-                <strong>${c.title}</strong>
-                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${c.progress}% complete • ${c.completedLessons}/${c.totalLessons || c.lessons.length} lessons</p>
-                <div id="cert-result-${c.id}"></div>
-              </div>
-              <button class="btn" onclick="finishCourse('${c.id}')">${c.progress >= 100 ? 'View Certificate' : 'Finish & Get Certificate'}</button>
-            </div>`).join('') : '<p style="color:var(--text-secondary);">Enroll in a course to earn certificates.</p>'}
+          <h1 class="page-title">Quizzes &amp; Certificates</h1>
+          <p class="page-desc">Complete the course assessment to mark all lessons finished and claim your certificate. You must finish all lessons first.</p>
+          <div id="quiz-status-list">
+            <p style="color:var(--text-secondary);">Loading quiz status...</p>
+          </div>
         `;
+        renderQuizStatus();
       }
 
       if (window.lucide) lucide.createIcons();
@@ -675,6 +746,281 @@
       localStorage.removeItem("email");
     }
 
+    // ===================== QUIZ FLOW =====================
+
+    async function renderQuizStatus() {
+      const container = document.getElementById('quiz-status-list');
+      if (!container) return;
+
+      if (!enrolledCourses.length) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">Enroll in a course to take quizzes.</p>';
+        return;
+      }
+
+      container.innerHTML = '<p style="color:var(--text-secondary);">Checking quiz status...</p>';
+
+      const cards = await Promise.all(enrolledCourses.map(async (c) => {
+        let status;
+        try {
+          status = await getQuizAttemptStatus(c.id);
+        } catch (e) {
+          status = { attempted: false, passed: false, score: null, total: null };
+        }
+
+        const lessonsDone = (c.completedLessons || 0) >= (c.totalLessons || c.lessons.length || 0);
+        let buttonHtml = '';
+
+        if (status.passed) {
+          buttonHtml = `<button class="btn btn-success" onclick="viewQuizResult('${c.id}')"><i data-lucide="award"></i> View Result (${status.score}/${status.total})</button>`;
+        } else if (status.attempted) {
+          buttonHtml = `<button class="btn btn-secondary" onclick="retryQuiz('${c.id}')"><i data-lucide="refresh-cw"></i> Retry Quiz (last: ${status.score}/${status.total})</button>`;
+        } else if (lessonsDone) {
+          buttonHtml = `<button class="btn" onclick="openTakeQuiz('${c.id}')"><i data-lucide="play"></i> Take Quiz</button>`;
+        } else {
+          buttonHtml = `<button class="btn" disabled style="opacity:0.5; cursor:not-allowed;"><i data-lucide="lock"></i> Complete all lessons to unlock</button>`;
+        }
+
+        return `
+          <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+              <strong>${c.title}</strong>
+              <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${c.progress}% complete • ${c.completedLessons}/${c.totalLessons || c.lessons.length} lessons</p>
+            </div>
+            ${buttonHtml}
+          </div>
+        `;
+      }));
+
+      container.innerHTML = cards.join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function openTakeQuiz(courseId) {
+      const btn = document.querySelector(`button[onclick="openTakeQuiz('${courseId}')"]`);
+      if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+
+      try {
+        const quiz = await getQuizForCourse(courseId);
+        if (!quiz || !quiz.questions || !quiz.questions.length) {
+          alert('No quiz available for this course.');
+          return;
+        }
+
+        quizState = {
+          courseId,
+          questions: quiz.questions,
+          currentQ: 0,
+          answers: new Array(quiz.questions.length).fill(null),
+          timeLeft: 60,
+          timerId: null,
+        };
+
+        document.getElementById('quizModal').hidden = false;
+        renderQuizQuestion();
+        startQuizTimer();
+      } catch (err) {
+        alert(err.message || 'Failed to load quiz. The server may require you to complete all lessons first.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Take Quiz'; }
+      }
+    }
+
+    function renderQuizQuestion() {
+      if (!quizState) return;
+
+      const q = quizState.questions[quizState.currentQ];
+      const progress = ((quizState.currentQ) / quizState.questions.length) * 100;
+
+      document.getElementById('quizQuestionNum').textContent = `Question ${quizState.currentQ + 1} of ${quizState.questions.length}`;
+      document.getElementById('quizQuestionText').textContent = q.questionText;
+      document.getElementById('quizProgressBar').style.width = `${progress}%`;
+
+      const optionsHtml = q.options.map((opt, idx) => `
+        <button type="button" class="quiz-option-btn" onclick="selectQuizAnswer(${idx})">${escapeAttr(opt)}</button>
+      `).join('');
+      document.getElementById('quizOptions').innerHTML = optionsHtml;
+
+      quizState.timeLeft = 60;
+      document.getElementById('quizTimerValue').textContent = '60';
+      document.getElementById('quizTimerValue').className = 'quiz-timer-running';
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function startQuizTimer() {
+      if (!quizState) return;
+      if (quizState.timerId) clearInterval(quizState.timerId);
+
+      quizState.timerId = setInterval(() => {
+        quizState.timeLeft -= 1;
+        const timerEl = document.getElementById('quizTimerValue');
+        timerEl.textContent = quizState.timeLeft;
+
+        if (quizState.timeLeft <= 10) timerEl.className = 'quiz-timer-warning';
+        if (quizState.timeLeft <= 0) {
+          clearInterval(quizState.timerId);
+          quizState.timerId = null;
+          quizState.answers[quizState.currentQ] = null;
+          advanceQuiz();
+        }
+      }, 1000);
+    }
+
+    function stopQuizTimer() {
+      if (quizState && quizState.timerId) {
+        clearInterval(quizState.timerId);
+        quizState.timerId = null;
+      }
+    }
+
+    function selectQuizAnswer(idx) {
+      if (!quizState) return;
+      const q = quizState.questions[quizState.currentQ];
+      quizState.answers[quizState.currentQ] = q.options[idx];
+
+      stopQuizTimer();
+      advanceQuiz();
+    }
+
+    function advanceQuiz() {
+      if (!quizState) return;
+
+      if (quizState.currentQ < quizState.questions.length - 1) {
+        quizState.currentQ += 1;
+        renderQuizQuestion();
+        startQuizTimer();
+      } else {
+        submitQuizNow();
+      }
+    }
+
+    async function submitQuizNow() {
+      if (!quizState) return;
+      stopQuizTimer();
+
+      const answers = quizState.answers;
+
+      hideQuiz();
+      showQuizResultScreen(quizState.courseId, 'submitting', null);
+
+      try {
+        const result = await submitQuizAnswers(quizState.courseId, answers);
+        showQuizResultScreen(quizState.courseId, 'done', result);
+      } catch (err) {
+        let msg = err.message || 'Submission failed';
+        let result = null;
+        if (err.message && err.message.includes('already passed')) {
+          msg = 'You have already passed this quiz.';
+        } else if (err.message && (err.message.includes('lessons') || err.message.includes('403'))) {
+          msg = 'Complete all lessons before taking the quiz.';
+        }
+        showQuizResultScreen(quizState.courseId, 'error', result, msg);
+      }
+
+      quizState = null;
+    }
+
+    function hideQuiz() {
+      const modal = document.getElementById('quizModal');
+      if (modal) modal.hidden = true;
+    }
+
+    function showQuizResultScreen(courseId, state, result, errorMsg) {
+      const view = document.getElementById('content-view');
+      if (!view) return;
+
+      if (state === 'submitting') {
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <h1 class="page-title">Submitting Quiz...</h1>
+          <p style="color:var(--text-secondary);">Calculating your score...</p>
+        `;
+      } else if (state === 'done' && result) {
+        const passed = result.passed;
+        const score = result.score;
+        const total = result.total;
+        const needed = Math.ceil(total / 2);
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <div class="card-item" style="text-align:center; padding:3rem 1rem;">
+            <h1 class="page-title">${passed ? 'Quiz Passed!' : 'Quiz Completed'}</h1>
+            <div style="font-size:3rem; font-weight:700; color:${passed ? 'var(--success)' : 'var(--accent)'}; margin: 1.5rem 0;">
+              ${score} / ${total}
+            </div>
+            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:2rem;">
+              ${passed ? 'Congratulations! You passed the quiz and earned your certificate.' : `You scored ${score} out of ${total}. You need ${needed} to pass. Review and try again.`}
+            </p>
+            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
+          </div>
+        `;
+      } else {
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <div class="card-item" style="text-align:center; padding:3rem 1rem;">
+            <h1 class="page-title">Quiz Submission</h1>
+            <p class="error-text" style="margin:1.5rem 0;">${escapeAttr(errorMsg || 'Something went wrong')}</p>
+            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
+          </div>
+        `;
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function viewQuizResult(courseId) {
+      try {
+        const status = await getQuizAttemptStatus(courseId);
+        const view = document.getElementById('content-view');
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <div class="card-item" style="text-align:center; padding:3rem 1rem;">
+            <h1 class="page-title">Quiz Result</h1>
+            <div style="font-size:3rem; font-weight:700; margin: 1.5rem 0; color:${status.passed ? 'var(--success)' : 'var(--accent)'};">
+              ${status.score} / ${status.total}
+            </div>
+            <p style="color:var(--text-secondary); font-size:1.1rem;">
+              ${status.passed ? 'You passed this quiz!' : 'You have not passed yet. You can retry.'}
+            </p>
+            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
+          </div>
+        `;
+      } catch (err) {
+        alert(err.message || 'Failed to load quiz result');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function retryQuiz(courseId) {
+      try {
+        const quiz = await getQuizForCourse(courseId);
+        if (!quiz || !quiz.questions || !quiz.questions.length) {
+          alert('No quiz available for this course.');
+          return;
+        }
+
+        quizState = {
+          courseId,
+          questions: quiz.questions,
+          currentQ: 0,
+          answers: new Array(quiz.questions.length).fill(null),
+          timeLeft: 60,
+          timerId: null,
+        };
+
+        document.getElementById('quizModal').hidden = false;
+        renderQuizQuestion();
+        startQuizTimer();
+      } catch (err) {
+        alert(err.message || 'Failed to load quiz.');
+      }
+    }
+
+    function closeQuizModal() {
+      stopQuizTimer();
+      quizState = null;
+      const modal = document.getElementById('quizModal');
+      if (modal) modal.hidden = true;
+    }
+
     fetchStudentEnrollments();
     if (window.lucide) lucide.createIcons();
   </script>
@@ -697,6 +1043,25 @@
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeCompleteModal()">Cancel</button>
         <button class="btn-success" onclick="confirmMarkComplete()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="quizModal" class="modal-overlay" hidden>
+    <div id="quizModalBox">
+      <div id="quizHeader">
+        <h3 id="quizQuestionNum">Question 1 of 5</h3>
+        <div id="quizTimer"><span id="quizTimerValue">60</span>s</div>
+      </div>
+      <div id="quizProgressWrap" style="margin:0 1.5rem;">
+        <div id="quizProgressBar"></div>
+      </div>
+      <div id="quizBody">
+        <h4 id="quizQuestionText"></h4>
+        <div id="quizOptions"></div>
+      </div>
+      <div style="padding:1rem; border-top:1px solid var(--border); text-align:right;">
+        <button class="btn-secondary" onclick="closeQuizModal()">Exit Quiz</button>
       </div>
     </div>
   </div>

@@ -116,3 +116,43 @@ async function completeQuizAndFinishCourse(courseId) {
     });
     return data.data || {};
 }
+
+// ---- Quiz ----
+async function getQuizForCourse(courseId) {
+    const data = await apiFetch(`/quiz/${courseId}`);
+    return data.data || data;
+}
+
+async function submitQuizAnswers(courseId, answers) {
+    const data = await apiFetch(`/quiz/${courseId}/submit`, {
+        method: "POST",
+        body: JSON.stringify({ answers }),
+    });
+    return data.data || data;
+}
+
+async function getQuizAttemptStatus(courseId) {
+    const data = await apiFetch(`/quiz/${courseId}/status`);
+    return data.data || { attempted: false, passed: false, score: null, total: null };
+}
+
+// Instructor quiz management
+async function createQuizApi(payload) {
+    const data = await apiFetch(`/quiz`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+    return data.data || {};
+}
+
+async function updateQuizApi(courseId, payload) {
+    const data = await apiFetch(`/quiz/${courseId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+    });
+    return data.data || {};
+}
+
+async function deleteQuizApi(courseId) {
+    return apiFetch(`/quiz/${courseId}`, { method: "DELETE" });
+}

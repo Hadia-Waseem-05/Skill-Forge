@@ -264,12 +264,12 @@
 
     function setTab(tab) {
       currentTab = tab;
-      if (tab !== 'manage-lessons' && tab !== 'students' && tab !== 'add-lesson') {
+      if (tab !== 'manage-lessons' && tab !== 'students' && tab !== 'add-lesson' && tab !== 'manage-quiz') {
         managedCourseId = null;
         selectedStudentsCourseId = null;
       }
       document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
-      if (tab === 'all-courses' || tab === 'manage-lessons' || tab === 'add-lesson' || tab === 'students') document.getElementById('tab-all').classList.add('active');
+      if (tab === 'all-courses' || tab === 'manage-lessons' || tab === 'add-lesson' || tab === 'students' || tab === 'manage-quiz') document.getElementById('tab-all').classList.add('active');
       if (tab === 'add-course') document.getElementById('tab-add').classList.add('active');
       if (tab === 'update-course') document.getElementById('tab-update').classList.add('active');
       if (tab === 'progress') document.getElementById('tab-prog').classList.add('active');
@@ -326,6 +326,8 @@
         renderManageLessons(view);
       } else if (currentTab === 'add-lesson') {
         renderAddLessonPage(view);
+      } else if (currentTab === 'manage-quiz') {
+        renderManageQuiz(view);
       } else if (currentTab === 'students') {
         renderStudents(view);
       } else if (currentTab === 'progress') {
@@ -492,7 +494,10 @@
         <button class="btn-secondary" onclick="setTab('all-courses')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Courses</button>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
           <h1 class="page-title" style="margin:0;">Manage Lessons</h1>
-          <button class="btn" onclick="openAddLesson()"><i data-lucide="plus"></i> Add New Lesson</button>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn" onclick="openAddLesson()"><i data-lucide="plus"></i> Add New Lesson</button>
+            <button class="btn-secondary" onclick="openManageQuiz()"><i data-lucide="edit-3"></i> Manage Quiz</button>
+          </div>
         </div>
         <p class="page-desc">Course: ${course ? course.title : 'Unknown'}</p>
 
@@ -599,6 +604,201 @@
         await refreshLessons();
       } catch (err) {
         alert(err.message || 'Failed to delete lesson');
+      }
+    }
+
+    // ===================== QUIZ MANAGEMENT =====================
+
+    let quizEditorQuestions = [];
+    let existingQuiz = null;
+
+    function openManageQuiz() {
+      setTab('manage-quiz');
+    }
+
+    async function renderManageQuiz(view) {
+      const course = instructorCourses.find(c => c.id === managedCourseId);
+      view.innerHTML = `
+        <button class="btn-secondary" onclick="setTab('manage-lessons')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Lessons</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+          <h1 class="page-title" style="margin:0;">Manage Quiz</h1>
+          <button class="btn-danger" id="quiz-delete-btn" onclick="deleteQuizAction()" style="display:none;"><i data-lucide="trash-2"></i> Delete Quiz</button>
+        </div>
+        <p class="page-desc">${course ? escapeAttr(course.title) : 'Course'}</p>
+        <div id="quiz-editor-container"><p style="color:var(--text-secondary);">Loading quiz...</p></div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      await loadQuizForEdit();
+    }
+
+    async function loadQuizForEdit() {
+      const container = document.getElementById('quiz-editor-container');
+      if (!container) return;
+
+      try {
+        const quiz = await getQuizForCourse(managedCourseId);
+        if (quiz && quiz.questions && quiz.questions.length) {
+          existingQuiz = quiz;
+          quizEditorQuestions = quiz.questions.map(q => ({
+            questionText: q.questionText || '',
+            options: Array.isArray(q.options) && q.options.length >= 2 ? [...q.options] : ['', ''],
+            correctAnswer: q.correctAnswer || '',
+          }));
+          document.getElementById('quiz-delete-btn').style.display = 'inline-flex';
+        } else {
+          existingQuiz = null;
+          quizEditorQuestions = [{ questionText: '', options: ['', ''], correctAnswer: '' }];
+          document.getElementById('quiz-delete-btn').style.display = 'none';
+        }
+      } catch (err) {
+        existingQuiz = null;
+        quizEditorQuestions = [{ questionText: '', options: ['', ''], correctAnswer: '' }];
+        document.getElementById('quiz-delete-btn').style.display = 'none';
+      }
+
+      renderQuizEditor();
+    }
+
+    function renderQuizEditor() {
+      const container = document.getElementById('quiz-editor-container');
+      if (!container) return;
+
+      container.innerHTML = `
+        <form id="quizEditForm" onsubmit="saveQuiz(event)">
+          ${quizEditorQuestions.map((q, qi) => renderQuizQuestionEditor(q, qi)).join('')}
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.5rem;">
+            <div>
+              <button type="button" class="btn-secondary" onclick="addQuizQuestion()" style="font-size:0.85rem;"><i data-lucide="plus"></i> Add Question</button>
+            </div>
+            <button type="submit" class="btn">${existingQuiz ? 'Update Quiz' : 'Create Quiz'}</button>
+          </div>
+        </form>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderQuizQuestionEditor(q, qi) {
+      const opts = q.options.length >= 2 ? q.options : ['', ''];
+      return `
+        <div class="card-item" id="question-${qi}" style="margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <h3 style="margin:0; font-size:1.1rem;">Question ${qi + 1}</h3>
+            ${quizEditorQuestions.length > 1 ? `<button type="button" class="btn-danger" onclick="removeQuizQuestion(${qi})" style="padding:0.2rem 0.6rem; font-size:0.75rem;"><i data-lucide="trash-2"></i></button>` : ''}
+          </div>
+          <div class="form-group">
+            <label>Question Text</label>
+            <input type="text" name="question_text" value="${escapeAttr(q.questionText)}" placeholder="Enter the question..." required>
+          </div>
+          <div class="form-group">
+            <label>Options</label>
+            ${opts.map((opt, oi) => `
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                <input type="text" name="option_text" value="${escapeAttr(opt)}" placeholder="Option ${oi + 1}" required style="flex:1;">
+                <label style="display:flex; align-items:center; gap:0.3rem; flex-shrink:0; cursor:pointer;">
+                  <input type="radio" name="correct_answer" value="${oi}" ${q.correctAnswer === opt ? 'checked' : ''}> Correct
+                </label>
+                ${opts.length > 2 ? `<button type="button" class="btn-danger" onclick="removeQuizOption(${qi}, ${oi})" style="padding:0.2rem 0.5rem; font-size:0.75rem;"><i data-lucide="x"></i></button>` : ''}
+              </div>
+            `).join('')}
+            <button type="button" class="btn-secondary" onclick="addQuizOption(${qi})" style="margin-top:0.5rem; font-size:0.8rem;"><i data-lucide="plus"></i> Add Option</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function syncQuizEditorState() {
+      const container = document.getElementById('quiz-editor-container');
+      if (!container) return;
+      quizEditorQuestions = [];
+      const cards = container.querySelectorAll('[id^="question-"]');
+      cards.forEach(card => {
+        const textInput = card.querySelector('input[name="question_text"]');
+        const optionInputs = card.querySelectorAll('input[name="option_text"]');
+        const correctRadio = card.querySelector('input[name="correct_answer"]:checked');
+        const correctIdx = correctRadio ? parseInt(correctRadio.value) : -1;
+        quizEditorQuestions.push({
+          questionText: textInput ? textInput.value : '',
+          options: Array.from(optionInputs).map(i => i.value),
+          correctAnswer: correctIdx >= 0 ? Array.from(optionInputs)[correctIdx].value : '',
+        });
+      });
+    }
+
+    function addQuizQuestion() {
+      syncQuizEditorState();
+      quizEditorQuestions.push({ questionText: '', options: ['', ''], correctAnswer: '' });
+      renderQuizEditor();
+    }
+
+    function removeQuizQuestion(qi) {
+      syncQuizEditorState();
+      quizEditorQuestions.splice(qi, 1);
+      renderQuizEditor();
+    }
+
+    function addQuizOption(qi) {
+      syncQuizEditorState();
+      quizEditorQuestions[qi].options.push('');
+      renderQuizEditor();
+    }
+
+    function removeQuizOption(qi, oi) {
+      syncQuizEditorState();
+      quizEditorQuestions[qi].options.splice(oi, 1);
+      if (quizEditorQuestions[qi].options.length < 2) {
+        quizEditorQuestions[qi].options = ['', ''];
+      }
+      renderQuizEditor();
+    }
+
+    async function saveQuiz(event) {
+      event.preventDefault();
+      syncQuizEditorState();
+
+      for (let qi = 0; qi < quizEditorQuestions.length; qi++) {
+        const q = quizEditorQuestions[qi];
+        if (!q.questionText.trim()) {
+          alert(`Question ${qi + 1} text is required`);
+          return;
+        }
+        const filledOptions = q.options.filter(o => o.trim() !== '');
+        if (filledOptions.length < 2) {
+          alert(`Question ${qi + 1} needs at least 2 options`);
+          return;
+        }
+        if (!q.correctAnswer) {
+          alert(`Question ${qi + 1} needs a correct answer selected`);
+          return;
+        }
+        if (!q.options.includes(q.correctAnswer)) {
+          alert(`Question ${qi + 1}: correct answer must match one of the options`);
+          return;
+        }
+      }
+
+      const payload = { course_id: managedCourseId, questions: quizEditorQuestions };
+      try {
+        if (existingQuiz) {
+          await updateQuizApi(managedCourseId, payload);
+          alert('Quiz updated successfully');
+        } else {
+          await createQuizApi(payload);
+          alert('Quiz created successfully');
+        }
+        await loadQuizForEdit();
+      } catch (err) {
+        alert(err.message || 'Failed to save quiz');
+      }
+    }
+
+    async function deleteQuizAction() {
+      if (!confirm('Delete this quiz? All student attempt records will be removed. This cannot be undone.')) return;
+      try {
+        await deleteQuizApi(managedCourseId);
+        alert('Quiz deleted successfully');
+        await loadQuizForEdit();
+      } catch (err) {
+        alert(err.message || 'Failed to delete quiz');
       }
     }
 
