@@ -60,7 +60,16 @@ h1, h2, h3, button {
 .nav-username {
     color: var(--primary);
     font-weight: 600;
-    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    .nav-username {
+        max-width: 80px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 12px;
+    }
 }
 
 .nav-login-btn::after {
@@ -134,6 +143,83 @@ h1, h2, h3, button {
 .nav-links a.nav-login-btn:hover {
     color: #FFFFFF;
     background: #362FA0;
+}
+
+.nav-avatar{
+    border-radius: 50%;
+    width: fit-content;
+    height: 30px;
+    padding: 4px;
+}
+
+    .bottom-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .body{
+        padding-bottom: 68px;
+    }
+
+    .navbar .nav-links {
+        display: flex;
+        gap: 0;
+    }
+
+    .navbar .nav-links > li {
+        display: none;
+    }
+
+    .navbar .nav-links > li.nav-user {
+        display: flex;
+    }
+
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid var(--border);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        justify-content: space-around;
+        align-items: center;
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 10.5px;
+        font-weight: 500;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 8px;
+        transition: color 0.2s ease, background 0.2s ease;
+    }
+
+    .bottom-nav-item svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .bottom-nav-item.active,
+    .bottom-nav-item:hover {
+        color: var(--primary);
+    }
+
+    .bottom-nav-item.active {
+        background: var(--bg-card);
+    }
 }
 
 /* Layout */
@@ -261,6 +347,24 @@ form input:focus {
     width: 100%;
 }
 
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
 /* Helper / error text */
 .helper-text {
     margin-top: 16px;
@@ -274,14 +378,166 @@ form input:focus {
     font-weight: 500;
 }
 
-.error-text {
-    background: #FEF2F2;
-    color: var(--warning);
+.progress-bar-bg {
+    background: #E5E7EB;
+    border-radius: 20px;
+    height: 8px;
+    width: 100%;
+    overflow: hidden;
+    margin: 0.6rem 0;
+}
+
+.progress-bar-fill {
+    background: var(--accent);
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.course-progress-wrap {
+    margin-top: 4px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+}
+
+.badge-published {
+    background: rgba(22, 163, 74, 0.15);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.badge-owner {
+    background: rgba(67, 56, 202, 0.12);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.success-text {
+    background: #F0FDF4;
+    color: var(--success);
     font-size: 13px;
     padding: 10px 12px;
     border-radius: 10px;
     margin-bottom: 16px;
     text-align: center;
+}
+
+/* Enrollment status message (success / error) — uses the shared card styling */
+.enroll-message {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 14px rgba(31, 41, 55, 0.08);
+}
+
+.enroll-message.success {
+    background: #F0FDF4;
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.enroll-message.error {
+    background: #FEF2F2;
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.enroll-message .enroll-message-link {
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--primary);
+    color: #FFFFFF;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.enroll-message .enroll-message-link:hover {
+    background: #362FA0;
+}
+
+.enroll-message .enroll-message-link:active {
+    transform: scale(0.96);
+}
+
+.modal-overlay:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-box {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modal-box h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.modal-box p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn-danger {
+    background: var(--warning);
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-danger:hover {
+    background: #B91C1C;
+}
+
+.btn-danger:active {
+    transform: scale(0.98);
 }
 
 .page-title {
@@ -290,6 +546,14 @@ form input:focus {
     color: var(--primary);
     margin-bottom: 4px;
     text-align: center;
+}
+
+.sidebar-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0 0 1rem 0.2rem;
 }
 
 .page-subtitle {
@@ -321,6 +585,11 @@ form input:focus {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    cursor: pointer;
+}
+
+.course-card:hover{
+    box-shadow: 12px 12px 17px rgba(31, 41, 55, 0.08);
 }
 
 .course-card.visible {
@@ -450,6 +719,10 @@ html {
     font-weight: 600;
     color: var(--primary);
     margin-bottom: 8px;
+}
+
+.about-card:hover{
+    box-shadow: 12px 12px 17px rgba(31, 41, 55, 0.08);
 }
 
 .about-card p {
@@ -632,4 +905,166 @@ html {
   border-color: var(--accent);
   color: var(--accent);
   font-weight: bold;
+}
+
+/* course-details: */
+.course-banner-wrap {
+    width: 100%;
+    height: 200px;
+}
+
+.course-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.course-detail-layout {
+    display: flex;
+    gap: 32px;
+    max-width: 1100px;
+    margin: 32px auto;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.course-detail-main {
+    flex: 2;
+    min-width: 280px;
+}
+
+.course-detail-main .page-title {
+    text-align: left;
+    margin-bottom: 8px;
+}
+
+.course-duration {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.course-description {
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+}
+
+.lessons-heading {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.lessons-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lesson-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+}
+
+.lesson-number {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: #FFFFFF;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.lesson-item-title {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.course-detail-sidebar {
+    flex: 1;
+    min-width: 240px;
+    max-width: 300px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: sticky;
+    top: 116px;
+}
+
+.instructor-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 4px;
+}
+
+.instructor-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.instructor-bio {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+#enrollBtn {
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .course-detail-sidebar {
+        position: static;
+        max-width: 100%;
+    }
+
+    .course-detail-layout {
+        margin: 20px auto;
+        gap: 20px;
+        padding: 0 16px;
+    }
+
+    .course-detail-main .page-title {
+        font-size: 24px;
+    }
+
+    .course-description {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .instructor-avatar {
+        width: 68px;
+        height: 68px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .lesson-item {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
 }

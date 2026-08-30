@@ -4,25 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkillForge - Student Dashboard</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg-dark: #0f172a;
-      --bg-card: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #06b6d4;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --border: #334155;
-      --radius: 10px;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    /* Dashboard-specific styles — colors/fonts/radius come from style.css */
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -44,8 +30,17 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.2rem;
-      height: fit-content;
+      position: sticky;
+      top: 24px;
+      height: calc(100vh - 48px);
+      display: flex;
+      flex-direction: column;
     }
+
+    .sidebar-toggle {
+      display: none;
+    }
+
     .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
     .sidebar-menu li button {
       width: 100%;
@@ -53,32 +48,46 @@
       padding: 0.75rem 1rem;
       background: transparent;
       border: none;
-      color: var(--text-muted);
-      border-radius: 6px;
+      color: var(--text-secondary);
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 0.8rem;
       transition: 0.2s;
+      font-family: 'Poppins', sans-serif;
     }
     .sidebar-menu li button:hover, .sidebar-menu li button.active {
-      background: rgba(79, 70, 229, 0.15);
-      color: var(--accent);
-      border: 1px solid var(--accent);
+      background: rgba(67, 56, 202, 0.1);
+      color: var(--primary);
+      border: 1px solid var(--primary);
     }
+
+    .sidebar-delete-wrap {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-delete-btn {
+      width: 100%;
+    }
+
+    .sidebar svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .content-area svg { width: 16px; height: 16px; vertical-align: middle; }
 
     .content-area {
       flex: 1;
-      background: var(--bg-card);
+      background: #FFFFFF;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 2rem;
     }
 
-    .page-title { font-size: 1.6rem; margin-bottom: 0.3rem; }
+    .page-title { font-size: 1.6rem; margin-bottom: 0.3rem; color: var(--primary); font-family: 'Poppins', sans-serif; }
     .page-desc {
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-size: 0.95rem;
       margin-bottom: 1.8rem;
       padding-bottom: 1rem;
@@ -92,79 +101,50 @@
       margin-bottom: 1.5rem;
     }
     .stat-card {
-      background: var(--bg-dark);
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius);
       padding: 1rem;
     }
-    .stat-card h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-    .stat-card .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .stat-card h4 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; }
+    .stat-card .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
 
     .card-item {
-      background: var(--bg-dark);
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius);
       padding: 1.2rem;
       margin-bottom: 1rem;
     }
 
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-    }
-    .btn-primary:hover { background: var(--primary-hover); }
-
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-
     .btn-success {
-      background: rgba(16, 185, 129, 0.2);
+      background: rgba(22, 163, 74, 0.12);
       border: 1px solid var(--success);
       color: var(--success);
       padding: 0.45rem 0.9rem;
-      border-radius: 6px;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       font-size: 0.85rem;
+      font-family: 'Poppins', sans-serif;
     }
 
     .form-group { margin-bottom: 1.2rem; }
-    .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-muted); }
-    .form-group input, .form-group textarea {
+    .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-secondary); }
+    .form-group input, .form-group textarea, .form-group select {
       width: 100%;
       padding: 0.75rem 1rem;
-      background: var(--bg-dark);
+      background: #FFFFFF;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      color: white;
+      border-radius: 10px;
+      color: var(--text-primary);
       font-size: 0.95rem;
       outline: none;
+      font-family: 'Inter', sans-serif;
     }
-    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
-
-    .progress-bar-bg {
-      background: #020617;
-      border-radius: 20px;
-      height: 8px;
-      width: 100%;
-      overflow: hidden;
-      margin: 0.6rem 0;
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: var(--primary);
     }
-    .progress-bar-fill { background: var(--accent); height: 100%; border-radius: 20px; }
 
     .lesson-item {
       display: flex;
@@ -173,82 +153,283 @@
       padding: 0.8rem 1rem;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 10px;
       margin-bottom: 0.6rem;
     }
     .lesson-item.active { border-color: var(--accent); }
 
-    .player-window {
-      background: #020617;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      height: 260px;
+    .lesson-video-area {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: var(--radius);
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
       margin-bottom: 1.5rem;
+    }
+    .lesson-video-area video,
+    .lesson-video-area iframe {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border: 0;
+    }
+    .lesson-content-fallback {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .lesson-description {
+      color: var(--text-primary);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    .completed-state {
+      color: var(--success);
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .lesson-num-badge {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      color: #FFFFFF;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-draft {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
     }
 
     @media (max-width: 850px) {
       .main-layout { flex-direction: column; }
-      .sidebar { width: 100%; }
+      .sidebar { width: 100%; position: static; top: auto; height: auto; display: block; }
+      .sidebar-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--primary);
+        color: #FFFFFF;
+        border: none;
+        border-radius: var(--radius);
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Poppins', sans-serif;
+      }
+      .sidebar-menu { display: none; margin-top: 0.6rem; }
+      .sidebar-delete-wrap { display: none; }
+      .sidebar.open .sidebar-menu { display: flex; }
+      .sidebar.open .sidebar-delete-wrap { display: block; }
     }
-  </style>
+
+    /* Quiz modal */
+    #quizModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #quizModal.hidden { display: none; }
+    #quizModalBox {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      width: 95%;
+      max-width: 600px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #quizHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    #quizTimer {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .quiz-timer-running { color: var(--accent); }
+    .quiz-timer-warning { color: var(--danger, #ef4444); }
+    #quizBody {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    #quizOptions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .quiz-option-btn {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .quiz-option-btn:hover {
+      background: rgba(67, 56, 202, 0.08);
+      border-color: var(--primary);
+    }
+    #quizProgressWrap {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #quizProgressBar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+</style>
 </head>
 <body>
 
-  <!-- Global Navbar Component Placeholder -->
-  <div id="navbar"></div>
+  <div id="navbar-placeholder"></div>
 
   <div class="main-layout">
     <aside class="sidebar">
+      <h2 class="sidebar-title">Dashboard</h2>
+      <button class="sidebar-toggle" onclick="toggleSidebar()"><i data-lucide="menu"></i> Dashboard</button>
       <ul class="sidebar-menu">
-        <li><button id="tab-profile" class="active" onclick="setTab('student-profile')">👤 My Profile</button></li>
-        <li><button id="tab-courses" onclick="setTab('my-courses')">📚 My Courses</button></li>
-        <li><button id="tab-progress" onclick="setTab('progress-tracking')">📊 Progress Tracking</button></li>
-        <li><button id="tab-quiz" onclick="setTab('quiz-cert')">🏆 Quiz & Certificates</button></li>
+        <li><button id="tab-profile" onclick="setTab('student-profile')"><i data-lucide="user"></i> My Profile</button></li>
+        <li><button id="tab-courses" class="active" onclick="setTab('my-courses')"><i data-lucide="book-open"></i> My Courses</button></li>
+        <li><button id="tab-progress" onclick="setTab('progress-tracking')"><i data-lucide="bar-chart-2"></i> Progress Tracking</button></li>
+        <li><button id="tab-quiz" onclick="setTab('quiz-cert')"><i data-lucide="award"></i> Quiz &amp; Certificates</button></li>
       </ul>
+
+      <div class="sidebar-delete-wrap">
+        <button class="btn-danger sidebar-delete-btn" onclick="openDeleteModal()"><i data-lucide="trash-2"></i> Delete Account</button>
+      </div>
     </aside>
 
     <main class="content-area" id="content-view"></main>
   </div>
 
-  <!-- Global Footer Component Placeholder -->
-  <div id="footer"></div>
+  <div id="footer-placeholder"></div>
+
+  <script src="navbar.js"></script>
+  <script src="footer.js"></script>
+  <script src="enrollments.js"></script>
 
   <script>
-    let currentTab = 'student-profile';
+    const ENROLL_API = "http://localhost:5000/api/enrollments/";
+    let currentTab = 'my-courses';
     let selectedCourseId = null;
-    let selectedLessonId = 1;
+    let selectedLessonId = null;
+    let enrolledCourses = [];
+    let currentLessonContent = "";
+    let viewMode = 'list';
+    let pendingComplete = null;
+    let loading = true;
+    let quizState = null;
 
-    let studentCourses = [
-      {
-        id: 101,
-        title: 'Web Development Basics',
-        description: 'Comprehensive introduction to HTML5, modern CSS3, and core JavaScript.',
-        lessons: [
-          { id: 1, title: '1. Introduction & Setup', duration: '12 mins', completed: true },
-          { id: 2, title: '2. HTML5 Structure & Semantic Tags', duration: '18 mins', completed: true },
-          { id: 3, title: '3. CSS3 Flexbox & Layouts', duration: '25 mins', completed: false },
-          { id: 4, title: '4. JavaScript DOM Manipulation', duration: '30 mins', completed: false }
-        ]
-      },
-      {
-        id: 102,
-        title: 'Full-Stack Node.js & Databases',
-        description: 'Build robust REST APIs, handle JWT authentication, and schema queries.',
-        lessons: [
-          { id: 1, title: '1. Node Architecture & Modules', duration: '15 mins', completed: true },
-          { id: 2, title: '2. Express Routing & Middleware', duration: '22 mins', completed: false },
-          { id: 3, title: '3. MongoDB CRUD Operations', duration: '35 mins', completed: false }
-        ]
+    function escapeAttr(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    async function fetchStudentEnrollments() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+        return;
       }
-    ];
+
+      loading = true;
+      renderContent();
+
+      try {
+        const enrollments = await getMyEnrollments();
+
+        const mapped = await Promise.all(enrollments.map(async (item) => {
+          const course = item.course_id || item.course || item;
+          const cid = course._id || course.id;
+
+          const [lessons, lessonProgress, progress] = await Promise.all([
+            getLessonsByCourse(cid).catch(() => []),
+            getLessonProgressForCourse(cid).catch(() => []),
+            getCourseProgress(cid).catch(() => ({ percentage: 0, completed_lessons: 0, total_lessons: 0 })),
+          ]);
+
+          const lpMap = {};
+          lessonProgress.forEach(lp => {
+            const key = (lp.lesson_id?._id || lp.lesson_id)?.toString();
+            if (key) lpMap[key] = lp;
+          });
+
+          const lessonsMapped = lessons.map(l => {
+            const lid = l._id || l.id;
+            const lp = lpMap[lid?.toString()] || {};
+            return {
+              lessonId: lid,
+              title: l.title,
+              content: l.content || "",
+              description: l.description || "",
+              orderIndex: l.order_index ?? 0,
+              completed: !!lp.completed,
+              completedDate: lp.completed_date || null
+            };
+          });
+
+          return {
+            id: cid,
+            title: course.title || "Course Title",
+            description: course.description || "",
+            thumbnail: course.thumbnail,
+            lessons: lessonsMapped,
+            progress: progress.percentage || 0,
+            completedLessons: progress.completed_lessons || 0,
+            totalLessons: progress.total_lessons || lessonsMapped.length || 0
+          };
+        }));
+
+        enrolledCourses = mapped;
+      } catch (err) {
+        console.error("Enrollments fetch failed:", err);
+      } finally {
+        loading = false;
+        renderContent();
+      }
+    }
 
     function setTab(tab) {
       currentTab = tab;
       selectedCourseId = null;
+      selectedLessonId = null;
+      viewMode = 'list';
       document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
       if (tab === 'student-profile') document.getElementById('tab-profile').classList.add('active');
       if (tab === 'my-courses') document.getElementById('tab-courses').classList.add('active');
@@ -260,86 +441,115 @@
     function renderContent() {
       const view = document.getElementById('content-view');
 
+      if (loading && currentTab === 'my-courses') {
+        view.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 3rem;">Loading your courses from server...</p>`;
+        return;
+      }
+
       if (currentTab === 'student-profile') {
+        const username = localStorage.getItem('username') || 'Student';
+        const userEmail = localStorage.getItem('email') || 'student@skillforge.com';
+        const userId = localStorage.getItem('userId');
+
         view.innerHTML = `
           <h1 class="page-title">Student Profile</h1>
           <p class="page-desc">Manage your personal profile and learning track preferences.</p>
-          <form onsubmit="event.preventDefault(); alert('Profile updated successfully!');">
+          <p id="profileSuccess" class="success-text" hidden></p>
+          <form onsubmit="handleStudentProfileSave(event)">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group"><label>Full Name</label><input type="text" value="Mahnoor Amjad" required></div>
-              <div class="form-group"><label>Email Address</label><input type="email" value="mahnoor@example.com" required></div>
+              <div class="form-group"><label>Full Name</label><input type="text" value="${username}" required></div>
+              <div class="form-group"><label>Email Address</label><input type="email" value="${userEmail}" required></div>
             </div>
-            <div class="form-group"><label>Learning Track</label><input type="text" value="Frontend & Full-Stack Development"></div>
-            <div class="form-group"><label>Bio</label><textarea rows="3">Learning modern web architectures and frontend interfaces on SkillForge.</textarea></div>
-            <button type="submit" class="btn-primary">Save Changes</button>
+            <div class="form-group"><label>Target Track</label><input type="text" value="Full-Stack Web Engineering"></div>
+            <div class="form-group"><label>Bio</label><textarea rows="3">Learning on SkillForge platform.</textarea></div>
+            <button type="submit" class="btn">Save Changes</button>
           </form>
         `;
       } else if (currentTab === 'my-courses') {
+        if (!enrolledCourses.length) {
+          view.innerHTML = `
+            <h1 class="page-title">My Enrolled Courses</h1>
+            <p class="page-desc">Access your registered learning modules.</p>
+            <div class="card-item" style="text-align: center; padding: 3rem 1rem;">
+              <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.2rem;">You are not enrolled in any course yet.</p>
+              <a href="courses.html" class="btn">Enroll Now</a>
+            </div>
+          `;
+          return;
+        }
+
         if (!selectedCourseId) {
           view.innerHTML = `
             <h1 class="page-title">My Enrolled Courses</h1>
-            <p class="page-desc">Click any course to open description, lesson player, and manual completion buttons.</p>
-            ${studentCourses.map(course => {
-              const comp = course.lessons.filter(l => l.completed).length;
-              const percent = Math.round((comp / course.lessons.length) * 100);
+            <p class="page-desc">Click any course to view curriculum lessons and launch video modules.</p>
+            ${enrolledCourses.map(course => {
+              const percent = course.progress || 0;
               return `
                 <div class="card-item" style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
                   <div style="flex: 1; min-width: 250px;">
                     <h3 style="font-size: 1.2rem; margin-bottom: 0.3rem;">${course.title}</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.6rem;">${course.description}</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.6rem;">${course.description}</p>
                     <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${percent}%;"></div></div>
-                    <span style="font-size: 0.85rem; color: var(--accent);">${comp} of ${course.lessons.length} Lessons Finished (${percent}%)</span>
+                    <span style="font-size: 0.85rem; color: var(--accent);">${course.completedLessons || 0} of ${course.totalLessons || course.lessons.length} Lessons Finished (${percent}%)</span>
                   </div>
-                  <button class="btn-primary" onclick="openCourse(${course.id})">Open Course & Lessons</button>
+                   <button class="btn" onclick="openCourse('${course.id}')">Open Lessons</button>
                 </div>
               `;
             }).join('')}
           `;
         } else {
-          const course = studentCourses.find(c => c.id === selectedCourseId);
-          const currentLesson = course.lessons.find(l => l.id === selectedLessonId) || course.lessons[0];
+          const course = enrolledCourses.find(c => c.id === selectedCourseId);
+          if (!course) return;
 
-          view.innerHTML = `
-            <button class="btn-secondary" onclick="selectedCourseId=null; renderContent();" style="margin-bottom: 1rem;">← Back to Courses</button>
-            <h1 class="page-title">${course.title}</h1>
-            <p class="page-desc">${course.description}</p>
+          if (viewMode === 'list') {
+            view.innerHTML = `
+              <button class="btn-secondary" onclick="selectedCourseId=null; selectedLessonId=null; viewMode='list'; renderContent();" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Courses</button>
+              <h1 class="page-title">${escapeAttr(course.title)}</h1>
+              <p class="page-desc">${course.description || ''}</p>
 
-            <div class="player-window">
-              <p style="font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 0.4rem;">▶ Playing: ${currentLesson.title}</p>
-              <p style="color: var(--text-muted); font-size: 0.9rem;">Duration: ${currentLesson.duration}</p>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
-              <div>
-                <strong>Current Lesson:</strong> <span style="color: var(--text-muted);">${currentLesson.title}</span>
-                <div style="font-size: 0.85rem; margin-top: 0.2rem; color: ${currentLesson.completed ? 'var(--success)' : 'var(--warning)'};">
-                  ${currentLesson.completed ? '✓ Status: Completed' : '⏳ Status: In Progress'}
+              <h3 style="margin-top:1.2rem; margin-bottom:0.8rem;">Lessons</h3>
+              ${course.lessons.length ? course.lessons.map(l => `
+                <div class="lesson-item">
+                  <div style="display:flex; align-items:center; gap:0.8rem;">
+                    <span class="lesson-num-badge">${l.orderIndex != null ? l.orderIndex : course.lessons.indexOf(l) + 1}</span>
+                    <div>
+                      <strong style="color:var(--text-main); cursor:pointer;" onclick="playLesson('${l.lessonId}')">${escapeAttr(l.title)}</strong>
+                      <div style="font-size:0.85rem; margin-top:0.2rem; color:${l.completed ? 'var(--success)' : 'var(--warning)'};">
+                        ${l.completed ? '<i data-lucide="check-circle"></i> Completed' : '<i data-lucide="clock"></i> In Progress'}
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn-secondary" style="padding:0.35rem 0.7rem; font-size:0.8rem;" onclick="playLesson('${l.lessonId}')">Play</button>
                 </div>
+              `).join('') : '<p style="color:var(--text-secondary);">No lessons in this course yet.</p>'}
+            `;
+          } else {
+            const currentLesson = course.lessons.find(l => l.lessonId === selectedLessonId) || course.lessons[0];
+            const lessonNumber = course.lessons.findIndex(l => l.lessonId === selectedLessonId) + 1;
+
+            view.innerHTML = `
+              <button class="btn-secondary" onclick="backToLessons()" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Lessons</button>
+
+              <h1 class="page-title" style="text-align:left; margin-bottom:1.2rem;">${lessonNumber}. ${currentLesson ? escapeAttr(currentLesson.title) : ''}</h1>
+
+              ${buildVideoArea(currentLessonContent || (currentLesson ? (currentLesson.content || '') : ''))}
+
+              <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:1.5rem;">
+                ${currentLesson && currentLesson.completed
+                  ? '<span class="completed-state"><i data-lucide="check-circle"></i> Completed</span>'
+                  : `<button class="btn-success" onclick="markComplete('${course.id}', '${currentLesson ? currentLesson.lessonId : ''}')"><i data-lucide="check-circle"></i> Mark as Completed</button>`}
               </div>
-              <button class="btn-success" onclick="toggleComplete(${course.id}, ${currentLesson.id})">
-                ${currentLesson.completed ? '✓ Completed (Click to Undo)' : '✔ Mark as Completed'}
-              </button>
-            </div>
 
-            <h3 style="margin-bottom: 0.8rem;">Curriculum Lessons</h3>
-            ${course.lessons.map(l => `
-              <div class="lesson-item ${l.id === currentLesson.id ? 'active' : ''}">
-                <div>
-                  <strong style="color: ${l.id === currentLesson.id ? 'var(--accent)' : 'var(--text-main)'}; cursor: pointer;" onclick="playLesson(${l.id})">${l.title}</strong>
-                  <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">(${l.duration})</span>
-                </div>
-                <div>
-                  ${l.completed ? '<span style="color: var(--success); font-size: 0.85rem; font-weight: 700; margin-right: 0.6rem;">✓ Done</span>' : ''}
-                  <button class="btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;" onclick="playLesson(${l.id})">Play</button>
-                </div>
+              <div class="lesson-description">
+                <p>${currentLesson ? (currentLesson.description || 'No description available for this lesson.') : ''}</p>
               </div>
-            `).join('')}
-          `;
+            `;
+          }
         }
       } else if (currentTab === 'progress-tracking') {
-        let total = 0, done = 0;
-        studentCourses.forEach(c => { total += c.lessons.length; done += c.lessons.filter(l => l.completed).length; });
-        const overall = Math.round((done / total) * 100);
+        const total = enrolledCourses.reduce((sum, c) => sum + (c.totalLessons || c.lessons.length), 0);
+        const done = enrolledCourses.reduce((sum, c) => sum + (c.completedLessons || 0), 0);
+        const overall = total > 0 ? Math.round((done / total) * 100) : 0;
 
         view.innerHTML = `
           <h1 class="page-title">Progress Tracking</h1>
@@ -347,59 +557,514 @@
           <div class="stats-grid">
             <div class="stat-card"><h4>Overall Completion</h4><div class="stat-number">${overall}%</div></div>
             <div class="stat-card"><h4>Lessons Finished</h4><div class="stat-number">${done} / ${total}</div></div>
-            <div class="stat-card"><h4>Active Courses</h4><div class="stat-number">${studentCourses.length}</div></div>
+            <div class="stat-card"><h4>Active Courses</h4><div class="stat-number">${enrolledCourses.length}</div></div>
           </div>
-          <h3 style="margin: 1.5rem 0 1rem;">Course Progress Breakdown</h3>
-          ${studentCourses.map(c => {
-            const finished = c.lessons.filter(l => l.completed).length;
-            const p = Math.round((finished / c.lessons.length) * 100);
-            return `
-              <div class="card-item">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
-                  <strong>${c.title}</strong><span style="color: var(--accent); font-weight: 600;">${p}%</span>
+          ${enrolledCourses.length ? `
+            <h3 style="margin: 1.5rem 0 1rem;">Course Progress Breakdown</h3>
+            ${enrolledCourses.map(c => {
+              const finished = c.completedLessons || 0;
+              const p = c.progress || 0;
+              return `
+                <div class="card-item">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                    <strong>${c.title}</strong><span style="color: var(--accent); font-weight: 600;">${p}%</span>
+                  </div>
+                  <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${p}%;"></div></div>
+                  <small style="color: var(--text-secondary);">${finished} of ${c.totalLessons || c.lessons.length} lessons finished</small>
                 </div>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${p}%;"></div></div>
-                <small style="color: var(--text-muted);">${finished} of ${c.lessons.length} lessons finished</small>
-              </div>
-            `;
-          }).join('')}
+              `;
+            }).join('')}
+          ` : '<p style="color:var(--text-secondary);">Enroll in a course to view detailed milestone analytics.</p>'}
         `;
       } else if (currentTab === 'quiz-cert') {
         view.innerHTML = `
-          <h1 class="page-title">Quizzes & Certifications</h1>
-          <p class="page-desc">Complete knowledge checks and claim your verified certificates.</p>
-          <h3 style="margin-bottom: 1rem;">Assessment Quiz</h3>
-          <div class="card-item" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h4>Web Development Basics: Comprehensive Quiz</h4>
-              <p style="color: var(--text-muted); font-size: 0.85rem;">10 Questions • 15 Minutes • Passing Score: 80%</p>
-            </div>
-            <a href="player.html" class="btn-primary">Start Quiz</a>
+          <h1 class="page-title">Quizzes &amp; Certificates</h1>
+          <p class="page-desc">Complete the course assessment to mark all lessons finished and claim your certificate. You must finish all lessons first.</p>
+          <div id="quiz-status-list">
+            <p style="color:var(--text-secondary);">Loading quiz status...</p>
           </div>
-          <h3 style="margin: 2rem 0 1rem;">Earned Certificates</h3>
-          <div class="card-item" style="border-color: var(--accent); background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); display: flex; justify-content: space-between; align-items: center;">
+        `;
+        renderQuizStatus();
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openCourse(id) {
+      selectedCourseId = id;
+      selectedLessonId = null;
+      viewMode = 'list';
+      currentLessonContent = "";
+      renderContent();
+    }
+
+    async function playLesson(id) {
+      selectedLessonId = id;
+      viewMode = 'player';
+      const course = enrolledCourses.find(c => c.id === selectedCourseId);
+      const lesson = course?.lessons.find(l => l.lessonId === id);
+      try {
+        const detail = await getLessonApi(id);
+        currentLessonContent = detail?.content || lesson?.content || "";
+      } catch (e) {
+        currentLessonContent = lesson?.content || "";
+      }
+      renderContent();
+    }
+
+    function buildVideoArea(content) {
+      if (!content || !content.trim()) {
+        return `<div class="lesson-video-area"><p style="color:#FFFFFF; opacity:0.7; font-size:1rem;">No video content available for this lesson.</p></div>`;
+      }
+      const text = content.trim();
+      if (/^https?:\/\/.+\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i.test(text)) {
+        return `<div class="lesson-video-area"><video controls src="${escapeAttr(text)}" preload="metadata"></video></div>`;
+      }
+      const yt = text.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      if (yt) {
+        return `<div class="lesson-video-area"><iframe src="https://www.youtube.com/embed/${yt[1]}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`;
+      }
+      const vm = text.match(/vimeo\.com\/(\d+)/);
+      if (vm) {
+        return `<div class="lesson-video-area"><iframe src="https://player.vimeo.com/video/${vm[1]}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+      }
+      if (/^https?:\/\//i.test(text)) {
+        return `<div class="lesson-video-area"><iframe src="${escapeAttr(text)}" allowfullscreen></iframe></div>`;
+      }
+      return `<div class="lesson-content-fallback"><p>${escapeAttr(text)}</p></div>`;
+    }
+
+    function markComplete(cId, lId) {
+      pendingComplete = { cId, lId };
+      document.getElementById('completeModal').hidden = false;
+    }
+
+    function closeCompleteModal() {
+      document.getElementById('completeModal').hidden = true;
+      pendingComplete = null;
+    }
+
+    async function confirmMarkComplete() {
+      const { cId, lId } = pendingComplete || {};
+      closeCompleteModal();
+      if (!cId || !lId) return;
+      try {
+        await markLessonComplete(lId);
+      } catch (err) {
+        alert(err.message || "Failed to mark lesson complete");
+        return;
+      }
+      const course = enrolledCourses.find(c => c.id === cId);
+      if (!course) return;
+      const [progress, lessonProgress] = await Promise.all([
+        getCourseProgress(cId).catch(() => ({ percentage: 0, completed_lessons: 0, total_lessons: 0 })),
+        getLessonProgressForCourse(cId).catch(() => [])
+      ]);
+      course.progress = progress.percentage || 0;
+      course.completedLessons = progress.completed_lessons || 0;
+      course.totalLessons = progress.total_lessons || course.lessons.length || 0;
+      const lpMap = {};
+      lessonProgress.forEach(lp => {
+        const k = (lp.lesson_id?._id || lp.lesson_id)?.toString();
+        if (k) lpMap[k] = lp;
+      });
+      course.lessons.forEach(l => {
+        const lp = lpMap[l.lessonId?.toString()] || {};
+        l.completed = !!lp.completed;
+        l.completedDate = lp.completed_date || null;
+      });
+      renderContent();
+    }
+
+    function backToLessons() {
+      viewMode = 'list';
+      selectedLessonId = null;
+      renderContent();
+    }
+
+    async function finishCourse(cid) {
+      const el = document.getElementById('cert-result-' + cid);
+      try {
+        const res = await completeQuizAndFinishCourse(cid);
+        if (el) el.innerHTML = `<p class="success-text">Certificate earned! Course ${res.percentage}% complete (${res.completed_lessons}/${res.total_lessons} lessons).</p>`;
+        const course = enrolledCourses.find(c => c.id === cid);
+        if (course) {
+          course.progress = res.percentage || 100;
+          course.completedLessons = res.completed_lessons;
+          course.totalLessons = res.total_lessons;
+          course.lessons.forEach(l => { l.completed = true; });
+        }
+      } catch (err) {
+        if (el) el.innerHTML = `<p class="error-text">${err.message || 'Failed to finish course'}</p>`;
+      }
+    }
+
+    function handleStudentProfileSave(e) {
+      e.preventDefault();
+      const successEl = document.getElementById("profileSuccess");
+      successEl.textContent = "Profile updated successfully!";
+      successEl.hidden = false;
+    }
+
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    function openDeleteModal() {
+      document.getElementById("deleteModal").hidden = false;
+    }
+
+    function closeDeleteModal() {
+      document.getElementById("deleteModal").hidden = true;
+    }
+
+    async function confirmDeleteAccount() {
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
+
+      try {
+        await deleteAccount(userId);
+        closeDeleteModal();
+        logoutUser();
+        window.location.href = "index.html";
+      } catch (err) {
+        const view = document.getElementById('content-view');
+        const errorEl = document.createElement('p');
+        errorEl.className = 'error-text';
+        errorEl.textContent = err.message || "Failed to delete account.";
+        if (view) view.insertBefore(errorEl, view.firstChild);
+      }
+    }
+
+    function logoutUser() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("name");
+      localStorage.removeItem("avatar");
+      localStorage.removeItem("username");
+      localStorage.removeItem("email");
+    }
+
+    // ===================== QUIZ FLOW =====================
+
+    async function renderQuizStatus() {
+      const container = document.getElementById('quiz-status-list');
+      if (!container) return;
+
+      if (!enrolledCourses.length) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">Enroll in a course to take quizzes.</p>';
+        return;
+      }
+
+      container.innerHTML = '<p style="color:var(--text-secondary);">Checking quiz status...</p>';
+
+      const cards = await Promise.all(enrolledCourses.map(async (c) => {
+        let status;
+        try {
+          status = await getQuizAttemptStatus(c.id);
+        } catch (e) {
+          status = { attempted: false, passed: false, score: null, total: null };
+        }
+
+        const lessonsDone = (c.completedLessons || 0) >= (c.totalLessons || c.lessons.length || 0);
+        let buttonHtml = '';
+
+        if (status.passed) {
+          buttonHtml = `<button class="btn btn-success" onclick="viewQuizResult('${c.id}')"><i data-lucide="award"></i> View Result (${status.score}/${status.total})</button>`;
+        } else if (status.attempted) {
+          buttonHtml = `<button class="btn btn-secondary" onclick="retryQuiz('${c.id}')"><i data-lucide="refresh-cw"></i> Retry Quiz (last: ${status.score}/${status.total})</button>`;
+        } else if (lessonsDone) {
+          buttonHtml = `<button class="btn" onclick="openTakeQuiz('${c.id}')"><i data-lucide="play"></i> Take Quiz</button>`;
+        } else {
+          buttonHtml = `<button class="btn" disabled style="opacity:0.5; cursor:not-allowed;"><i data-lucide="lock"></i> Complete all lessons to unlock</button>`;
+        }
+
+        return `
+          <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
             <div>
-              <span style="color: var(--success); font-weight: 700; font-size: 0.85rem;">✓ VERIFIED & ISSUED</span>
-              <h4 style="font-size: 1.15rem; margin: 0.3rem 0;">Web Development Fundamentals</h4>
-              <p style="color: var(--text-muted); font-size: 0.85rem;">SkillForge Verified Completion</p>
+              <strong>${c.title}</strong>
+              <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${c.progress}% complete • ${c.completedLessons}/${c.totalLessons || c.lessons.length} lessons</p>
             </div>
-            <button class="btn-primary" onclick="alert('Downloading Certificate PDF...')">Download Certificate</button>
+            ${buttonHtml}
+          </div>
+        `;
+      }));
+
+      container.innerHTML = cards.join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function openTakeQuiz(courseId) {
+      const btn = document.querySelector(`button[onclick="openTakeQuiz('${courseId}')"]`);
+      if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+
+      try {
+        const quiz = await getQuizForCourse(courseId);
+        if (!quiz || !quiz.questions || !quiz.questions.length) {
+          alert('No quiz available for this course.');
+          return;
+        }
+
+        quizState = {
+          courseId,
+          questions: quiz.questions,
+          currentQ: 0,
+          answers: new Array(quiz.questions.length).fill(null),
+          timeLeft: 60,
+          timerId: null,
+        };
+
+        document.getElementById('quizModal').hidden = false;
+        renderQuizQuestion();
+        startQuizTimer();
+      } catch (err) {
+        alert(err.message || 'Failed to load quiz. The server may require you to complete all lessons first.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Take Quiz'; }
+      }
+    }
+
+    function renderQuizQuestion() {
+      if (!quizState) return;
+
+      const q = quizState.questions[quizState.currentQ];
+      const progress = ((quizState.currentQ) / quizState.questions.length) * 100;
+
+      document.getElementById('quizQuestionNum').textContent = `Question ${quizState.currentQ + 1} of ${quizState.questions.length}`;
+      document.getElementById('quizQuestionText').textContent = q.questionText;
+      document.getElementById('quizProgressBar').style.width = `${progress}%`;
+
+      const optionsHtml = q.options.map((opt, idx) => `
+        <button type="button" class="quiz-option-btn" onclick="selectQuizAnswer(${idx})">${escapeAttr(opt)}</button>
+      `).join('');
+      document.getElementById('quizOptions').innerHTML = optionsHtml;
+
+      quizState.timeLeft = 60;
+      document.getElementById('quizTimerValue').textContent = '60';
+      document.getElementById('quizTimerValue').className = 'quiz-timer-running';
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function startQuizTimer() {
+      if (!quizState) return;
+      if (quizState.timerId) clearInterval(quizState.timerId);
+
+      quizState.timerId = setInterval(() => {
+        quizState.timeLeft -= 1;
+        const timerEl = document.getElementById('quizTimerValue');
+        timerEl.textContent = quizState.timeLeft;
+
+        if (quizState.timeLeft <= 10) timerEl.className = 'quiz-timer-warning';
+        if (quizState.timeLeft <= 0) {
+          clearInterval(quizState.timerId);
+          quizState.timerId = null;
+          quizState.answers[quizState.currentQ] = null;
+          advanceQuiz();
+        }
+      }, 1000);
+    }
+
+    function stopQuizTimer() {
+      if (quizState && quizState.timerId) {
+        clearInterval(quizState.timerId);
+        quizState.timerId = null;
+      }
+    }
+
+    function selectQuizAnswer(idx) {
+      if (!quizState) return;
+      const q = quizState.questions[quizState.currentQ];
+      quizState.answers[quizState.currentQ] = q.options[idx];
+
+      stopQuizTimer();
+      advanceQuiz();
+    }
+
+    function advanceQuiz() {
+      if (!quizState) return;
+
+      if (quizState.currentQ < quizState.questions.length - 1) {
+        quizState.currentQ += 1;
+        renderQuizQuestion();
+        startQuizTimer();
+      } else {
+        submitQuizNow();
+      }
+    }
+
+    async function submitQuizNow() {
+      if (!quizState) return;
+      stopQuizTimer();
+
+      const answers = quizState.answers;
+
+      hideQuiz();
+      showQuizResultScreen(quizState.courseId, 'submitting', null);
+
+      try {
+        const result = await submitQuizAnswers(quizState.courseId, answers);
+        showQuizResultScreen(quizState.courseId, 'done', result);
+      } catch (err) {
+        let msg = err.message || 'Submission failed';
+        let result = null;
+        if (err.message && err.message.includes('already passed')) {
+          msg = 'You have already passed this quiz.';
+        } else if (err.message && (err.message.includes('lessons') || err.message.includes('403'))) {
+          msg = 'Complete all lessons before taking the quiz.';
+        }
+        showQuizResultScreen(quizState.courseId, 'error', result, msg);
+      }
+
+      quizState = null;
+    }
+
+    function hideQuiz() {
+      const modal = document.getElementById('quizModal');
+      if (modal) modal.hidden = true;
+    }
+
+    function showQuizResultScreen(courseId, state, result, errorMsg) {
+      const view = document.getElementById('content-view');
+      if (!view) return;
+
+      if (state === 'submitting') {
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <h1 class="page-title">Submitting Quiz...</h1>
+          <p style="color:var(--text-secondary);">Calculating your score...</p>
+        `;
+      } else if (state === 'done' && result) {
+        const passed = result.passed;
+        const score = result.score;
+        const total = result.total;
+        const needed = Math.ceil(total / 2);
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <div class="card-item" style="text-align:center; padding:3rem 1rem;">
+            <h1 class="page-title">${passed ? 'Quiz Passed!' : 'Quiz Completed'}</h1>
+            <div style="font-size:3rem; font-weight:700; color:${passed ? 'var(--success)' : 'var(--accent)'}; margin: 1.5rem 0;">
+              ${score} / ${total}
+            </div>
+            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:2rem;">
+              ${passed ? 'Congratulations! You passed the quiz and earned your certificate.' : `You scored ${score} out of ${total}. You need ${needed} to pass. Review and try again.`}
+            </p>
+            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
+          </div>
+        `;
+      } else {
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <div class="card-item" style="text-align:center; padding:3rem 1rem;">
+            <h1 class="page-title">Quiz Submission</h1>
+            <p class="error-text" style="margin:1.5rem 0;">${escapeAttr(errorMsg || 'Something went wrong')}</p>
+            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
           </div>
         `;
       }
+      if (window.lucide) lucide.createIcons();
     }
 
-    function openCourse(id) { selectedCourseId = id; selectedLessonId = 1; renderContent(); }
-    function playLesson(id) { selectedLessonId = id; renderContent(); }
-    function toggleComplete(cId, lId) {
-      const course = studentCourses.find(c => c.id === cId);
-      if (course) {
-        const lesson = course.lessons.find(l => l.id === lId);
-        if (lesson) { lesson.completed = !lesson.completed; renderContent(); }
+    async function viewQuizResult(courseId) {
+      try {
+        const status = await getQuizAttemptStatus(courseId);
+        const view = document.getElementById('content-view');
+        view.innerHTML = `
+          <button class="btn-secondary" onclick="setTab('quiz-cert')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Quizzes</button>
+          <div class="card-item" style="text-align:center; padding:3rem 1rem;">
+            <h1 class="page-title">Quiz Result</h1>
+            <div style="font-size:3rem; font-weight:700; margin: 1.5rem 0; color:${status.passed ? 'var(--success)' : 'var(--accent)'};">
+              ${status.score} / ${status.total}
+            </div>
+            <p style="color:var(--text-secondary); font-size:1.1rem;">
+              ${status.passed ? 'You passed this quiz!' : 'You have not passed yet. You can retry.'}
+            </p>
+            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
+          </div>
+        `;
+      } catch (err) {
+        alert(err.message || 'Failed to load quiz result');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function retryQuiz(courseId) {
+      try {
+        const quiz = await getQuizForCourse(courseId);
+        if (!quiz || !quiz.questions || !quiz.questions.length) {
+          alert('No quiz available for this course.');
+          return;
+        }
+
+        quizState = {
+          courseId,
+          questions: quiz.questions,
+          currentQ: 0,
+          answers: new Array(quiz.questions.length).fill(null),
+          timeLeft: 60,
+          timerId: null,
+        };
+
+        document.getElementById('quizModal').hidden = false;
+        renderQuizQuestion();
+        startQuizTimer();
+      } catch (err) {
+        alert(err.message || 'Failed to load quiz.');
       }
     }
 
-    renderContent();
+    function closeQuizModal() {
+      stopQuizTimer();
+      quizState = null;
+      const modal = document.getElementById('quizModal');
+      if (modal) modal.hidden = true;
+    }
+
+    fetchStudentEnrollments();
+    if (window.lucide) lucide.createIcons();
   </script>
+
+  <div id="deleteModal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <h3>Delete Account</h3>
+      <p>This action is permanent and cannot be undone. All your data will be removed.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" onclick="confirmDeleteAccount()">Delete Account</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="completeModal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <h3>Mark as Completed</h3>
+      <p>Mark this lesson as completed?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCompleteModal()">Cancel</button>
+        <button class="btn-success" onclick="confirmMarkComplete()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="quizModal" class="modal-overlay" hidden>
+    <div id="quizModalBox">
+      <div id="quizHeader">
+        <h3 id="quizQuestionNum">Question 1 of 5</h3>
+        <div id="quizTimer"><span id="quizTimerValue">60</span>s</div>
+      </div>
+      <div id="quizProgressWrap" style="margin:0 1.5rem;">
+        <div id="quizProgressBar"></div>
+      </div>
+      <div id="quizBody">
+        <h4 id="quizQuestionText"></h4>
+        <div id="quizOptions"></div>
+      </div>
+      <div style="padding:1rem; border-top:1px solid var(--border); text-align:right;">
+        <button class="btn-secondary" onclick="closeQuizModal()">Exit Quiz</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

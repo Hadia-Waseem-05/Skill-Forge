@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 
 const quizSchema = new mongoose.Schema({
-  courseId: {
+  course_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Course",
+    required: true,
   },
   questions: [
     {
