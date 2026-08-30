@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
          },
          avatar: {
            type: String,
-           default: "https://api.dicebear.com/7.x/initials/svg?seed=User",  
+           default: "",  
          },
     },
     {

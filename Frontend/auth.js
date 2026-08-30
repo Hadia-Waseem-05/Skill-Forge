@@ -48,6 +48,7 @@ if (loginForm) {
             localStorage.setItem("role", data.user.role);
             localStorage.setItem("userId", data.user.id);
             localStorage.setItem("name", data.user.name);
+            localStorage.setItem("avatar", data.user.avatar);
 
             redirectByRole(data.user.role);
         } catch (err) {
@@ -93,6 +94,7 @@ if (registerForm) {
             localStorage.setItem("role", data.user.role);
             localStorage.setItem("userId", data.user.id);
             localStorage.setItem("name", data.user.name);
+            localStorage.setItem("avatar", data.user.avatar);
 
             redirectByRole(data.user.role);
         } catch (err) {
