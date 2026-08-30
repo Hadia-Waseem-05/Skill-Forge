@@ -48,3 +48,71 @@ async function getStudentsProgressForCourse(courseId) {
 async function deleteAccount(userId) {
     return apiFetch(`/auth/${userId}`, { method: "DELETE" });
 }
+
+// ---- Courses (instructor) ----
+async function getMyCoursesApi() {
+    const data = await apiFetch(`/courses/my`);
+    return data.data || [];
+}
+
+async function updateCourseApi(courseId, payload) {
+    return apiFetch(`/courses/${courseId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+    });
+}
+
+async function deleteCourseApi(courseId) {
+    return apiFetch(`/courses/${courseId}`, { method: "DELETE" });
+}
+
+// ---- Lessons ----
+async function getLessonsByCourse(courseId) {
+    const data = await apiFetch(`/lessons/course/${courseId}`);
+    return data.data || [];
+}
+
+async function getLessonApi(lessonId) {
+    const data = await apiFetch(`/lessons/${lessonId}`);
+    return data.data || null;
+}
+
+async function createLessonApi(payload) {
+    const data = await apiFetch(`/lessons`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+    return data.data || {};
+}
+
+async function updateLessonApi(lessonId, payload) {
+    const data = await apiFetch(`/lessons/${lessonId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+    });
+    return data.data || {};
+}
+
+async function deleteLessonApi(lessonId) {
+    return apiFetch(`/lessons/${lessonId}`, { method: "DELETE" });
+}
+
+// ---- Enrollments (instructor roster) ----
+async function getEnrollmentsForCourse(courseId) {
+    const data = await apiFetch(`/enrollments/course/${courseId}`);
+    return data.data || [];
+}
+
+// ---- Progress ----
+// NOTE TO BACKEND: markLessonComplete only marks a lesson complete.
+// There is no "unmark" endpoint, so the UI must not offer an undo/toggle-off.
+async function markLessonComplete(lessonId) {
+    return apiFetch(`/progress/lesson/${lessonId}/complete`, { method: "POST" });
+}
+
+async function completeQuizAndFinishCourse(courseId) {
+    const data = await apiFetch(`/progress/course/${courseId}/complete-quiz`, {
+        method: "POST",
+    });
+    return data.data || {};
+}

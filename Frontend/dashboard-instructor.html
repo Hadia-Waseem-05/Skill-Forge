@@ -5,25 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkillForge - Instructor Dashboard</title>
   <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg-dark: #0f172a;
-      --bg-card: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #06b6d4;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --border: #334155;
-      --radius: 10px;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    /* Dashboard-specific styles — colors/fonts/radius come from style.css */
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -51,6 +36,11 @@
       display: flex;
       flex-direction: column;
     }
+
+    .sidebar-toggle {
+      display: none;
+    }
+
     .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
     .sidebar-menu li button {
       width: 100%;
@@ -58,19 +48,20 @@
       padding: 0.75rem 1rem;
       background: transparent;
       border: none;
-      color: var(--text-muted);
-      border-radius: 6px;
+      color: var(--text-secondary);
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 0.8rem;
       transition: 0.2s;
+      font-family: 'Poppins', sans-serif;
     }
     .sidebar-menu li button:hover, .sidebar-menu li button.active {
-      background: rgba(79, 70, 229, 0.15);
-      color: var(--accent);
-      border: 1px solid var(--accent);
+      background: rgba(67, 56, 202, 0.1);
+      color: var(--primary);
+      border: 1px solid var(--primary);
     }
 
     .sidebar-delete-wrap {
@@ -88,15 +79,15 @@
 
     .content-area {
       flex: 1;
-      background: var(--bg-card);
+      background: #FFFFFF;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 2rem;
     }
 
-    .page-title { font-size: 1.6rem; margin-bottom: 0.3rem; }
+    .page-title { font-size: 1.6rem; margin-bottom: 0.3rem; color: var(--primary); font-family: 'Poppins', sans-serif; }
     .page-desc {
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-size: 0.95rem;
       margin-bottom: 1.8rem;
       padding-bottom: 1rem;
@@ -110,146 +101,105 @@
       margin-bottom: 1.5rem;
     }
     .stat-card {
-      background: var(--bg-dark);
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius);
       padding: 1rem;
     }
-    .stat-card h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-    .stat-card .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .stat-card h4 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; }
+    .stat-card .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
 
     .card-item {
-      background: var(--bg-dark);
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius);
       padding: 1.2rem;
       margin-bottom: 1rem;
     }
 
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
+    .btn-success {
+      background: rgba(22, 163, 74, 0.12);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 0.45rem 0.9rem;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
+      font-size: 0.85rem;
+      font-family: 'Poppins', sans-serif;
     }
-    .btn-primary:hover { background: var(--primary-hover); }
-
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
     .form-group { margin-bottom: 1.2rem; }
-    .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-muted); }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-secondary); }
     .form-group input, .form-group textarea, .form-group select {
       width: 100%;
-      height: 40px;
       padding: 0.75rem 1rem;
-      background: var(--bg-dark);
+      background: #FFFFFF;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      color: white;
+      border-radius: 10px;
+      color: var(--text-primary);
       font-size: 0.95rem;
       outline: none;
+      font-family: 'Inter', sans-serif;
     }
     .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-      border-color: var(--accent);
+      border-color: var(--primary);
     }
 
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .badge-published { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid var(--success); }
-    .badge-draft { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid var(--warning); }
-
-    .success-text {
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--success);
-      font-size: 13px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      text-align: center;
-      border: 1px solid var(--success);
-    }
-
-    .modal-overlay:not([hidden]) {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
+    .lesson-item {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 0.6rem;
+    }
+    .lesson-item.active { border-color: var(--accent); }
+
+    .player-window {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 260px;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 2000;
+      margin-bottom: 1.5rem;
     }
 
-    .modal-box {
-      background: var(--bg-card);
-      border-radius: var(--radius);
-      padding: 24px;
-      max-width: 420px;
-      width: 90%;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border);
-    }
-
-    .modal-box h3 {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 8px;
-    }
-
-    .modal-box p {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.5;
-      margin-bottom: 4px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      margin-top: 20px;
-    }
-
-    .btn-danger {
-      background: #DC2626;
-      color: #FFFFFF;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .btn-danger:hover {
-      background: #B91C1C;
+    .badge-draft {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
     }
 
     @media (max-width: 850px) {
       .main-layout { flex-direction: column; }
       .sidebar { width: 100%; position: static; top: auto; height: auto; display: block; }
+      .sidebar-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--primary);
+        color: #FFFFFF;
+        border: none;
+        border-radius: var(--radius);
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Poppins', sans-serif;
+      }
+      .sidebar-menu { display: none; margin-top: 0.6rem; }
+      .sidebar-delete-wrap { display: none; }
+      .sidebar.open .sidebar-menu { display: flex; }
+      .sidebar.open .sidebar-delete-wrap { display: block; }
     }
-  </style>
-  <link rel="stylesheet" href="style.css">
+</style>
 </head>
 <body>
 
@@ -257,6 +207,8 @@
 
   <div class="main-layout">
     <aside class="sidebar">
+      <h2 class="sidebar-title">Dashboard</h2>
+      <button class="sidebar-toggle" onclick="toggleSidebar()"><i data-lucide="menu"></i> Dashboard</button>
       <ul class="sidebar-menu">
         <li><button id="tab-all" class="active" onclick="setTab('all-courses')"><i data-lucide="book-open"></i> All Courses</button></li>
         <li><button id="tab-add" onclick="setTab('add-course')"><i data-lucide="plus"></i> Add New Course</button></li>
@@ -280,9 +232,12 @@
   <script src="enrollments.js"></script>
 
   <script>
-    const COURSES_API = "http://localhost:5000/api/courses/";
     let currentTab = 'all-courses';
     let instructorCourses = [];
+    let managedCourseId = null;
+    let managedLessons = [];
+    let editingLessonId = null;
+    let selectedStudentsCourseId = null;
     let loading = true;
 
     async function fetchInstructorCourses() {
@@ -296,21 +251,16 @@
       renderContent();
 
       try {
-        const res = await fetch(COURSES_API, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        const data = await res.json();
-        const all = data.data || data || [];
-        
+        const all = await getMyCoursesApi();
+
         instructorCourses = all.map(c => ({
           id: c._id || c.id,
           title: c.title || "Untitled Course",
-          category: c.category || "General",
+          category: "General",
           description: c.description || "",
-          status: c.status || "published",
-          students: c.studentsCount || 0
+          status: c.published ? "published" : "unpublished",
+          thumbnail: c.thumbnail || "",
+          students: 0
         }));
       } catch (err) {
         console.error("Instructor courses fetch failed:", err);
@@ -322,8 +272,12 @@
 
     function setTab(tab) {
       currentTab = tab;
+      if (tab !== 'manage-lessons' && tab !== 'students') {
+        managedCourseId = null;
+        selectedStudentsCourseId = null;
+      }
       document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
-      if (tab === 'all-courses') document.getElementById('tab-all').classList.add('active');
+      if (tab === 'all-courses' || tab === 'manage-lessons' || tab === 'students') document.getElementById('tab-all').classList.add('active');
       if (tab === 'add-course') document.getElementById('tab-add').classList.add('active');
       if (tab === 'update-course') document.getElementById('tab-update').classList.add('active');
       if (tab === 'progress') document.getElementById('tab-prog').classList.add('active');
@@ -334,8 +288,8 @@
     function renderContent() {
       const view = document.getElementById('content-view');
 
-      if (loading && currentTab === 'all-courses') {
-        view.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 3rem;">Loading instructor courses from server...</p>`;
+      if (loading && (currentTab === 'all-courses' || currentTab === 'update-course')) {
+        view.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 3rem;">Loading instructor courses from server...</p>`;
         return;
       }
 
@@ -362,40 +316,24 @@
           <p class="page-desc">Create a new course curriculum and publish it for students.</p>
           <form onsubmit="handleCreateCourse(event)">
             <div class="form-group"><label>Course Title</label><input type="text" id="new-title" placeholder="e.g. Master React & Node.js" required></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group"><label>Category</label><input type="text" id="new-category" placeholder="Web Development" required></div>
-              <div class="form-group">
-                <label>Status</label>
-                <select id="new-status">
-                  <option value="published">Published</option>
-                  <option value="unpublished">Save as Draft (Unpublished)</option>
-                </select>
-              </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="new-status">
+                <option value="published">Published</option>
+                <option value="unpublished">Save as Draft (Unpublished)</option>
+              </select>
             </div>
+            <div class="form-group"><label>Thumbnail URL</label><input type="text" id="new-thumbnail" placeholder="https://... (optional)"></div>
             <div class="form-group"><label>Description</label><textarea id="new-desc" rows="3" placeholder="Course outline..." required></textarea></div>
-            <button type="submit" class="btn-primary" id="btn-create">Create Course</button>
+            <button type="submit" class="btn" id="btn-create">Create Course</button>
           </form>
         `;
       } else if (currentTab === 'update-course') {
-        view.innerHTML = `
-          <h1 class="page-title">Update Course</h1>
-          <p class="page-desc">Modify existing course content and visibility.</p>
-          ${instructorCourses.length === 0 ? '<p style="color:var(--text-muted);">No courses available to update. Please add a course first.</p>' : `
-             <form onsubmit="handleUpdateCourse(event)">
-               <div class="form-group">
-                 <label>Select Course</label>
-                 <select id="select-update">${instructorCourses.map(c => `<option value="${c.id}">${c.title} (${c.status})</option>`).join('')}</select>
-               </div>
-               <div class="form-group"><label>Update Title</label><input type="text" id="edit-title" value="${instructorCourses[0]?.title || ''}"></div>
-               <div class="form-group">
-                 <label>Status</label>
-                 <select id="edit-status"><option value="published">Published</option><option value="unpublished">Unpublished</option></select>
-               </div>
-               <p id="updateSuccess" class="success-text" hidden></p>
-               <button type="submit" class="btn-primary">Save Changes</button>
-             </form>
-          `}
-        `;
+        renderUpdateCourseList(view);
+      } else if (currentTab === 'manage-lessons') {
+        renderManageLessons(view);
+      } else if (currentTab === 'students') {
+        renderStudents(view);
       } else if (currentTab === 'progress') {
         view.innerHTML = `
           <h1 class="page-title">Courses Progress & Analytics</h1>
@@ -424,7 +362,7 @@
             </div>
             <div class="form-group"><label>Headline</label><input type="text" value="Senior Web Development Instructor"></div>
             <div class="form-group"><label>Bio</label><textarea rows="4">Delivering quality programming courses on SkillForge.</textarea></div>
-            <button type="submit" class="btn-primary">Save Profile</button>
+            <button type="submit" class="btn">Save Profile</button>
           </form>
         `;
       }
@@ -443,7 +381,7 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No courses available matching criteria.</p>`;
+        container.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No courses available matching criteria.</p>`;
         return;
       }
 
@@ -452,38 +390,255 @@
           <div>
             <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
             <h3 style="margin-top:0.3rem;">${c.title}</h3>
-            <p style="color:var(--text-muted); font-size:0.85rem;">Category: ${c.category}</p>
+            <p style="color:var(--text-secondary); font-size:0.85rem;">Category: ${c.category}</p>
           </div>
-          <div style="display:flex; gap:0.5rem;">
-            <button class="btn-secondary" onclick="setTab('update-course')">Edit</button>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button class="btn-secondary" onclick="renderUpdateForm('${c.id}')"><i data-lucide="pencil"></i> Edit</button>
+            <button class="btn" onclick="openManageLessons('${c.id}')"><i data-lucide="list"></i> Lessons</button>
+            <button class="btn-secondary" onclick="openStudents('${c.id}')"><i data-lucide="users"></i> Students</button>
+            <button class="btn-danger" onclick="deleteCourseAction('${c.id}')"><i data-lucide="trash-2"></i> Delete</button>
           </div>
         </div>
       `).join('');
     }
 
+    function renderUpdateCourseList(view) {
+      if (!instructorCourses.length) {
+        view.innerHTML = `
+          <h1 class="page-title">Update Course</h1>
+          <p class="page-desc">Modify existing course content and visibility.</p>
+          <p style="color:var(--text-secondary);">No courses available to update. Please add a course first.</p>`;
+        return;
+      }
+      view.innerHTML = `
+        <h1 class="page-title">Update Course</h1>
+        <p class="page-desc">Select a course to edit its content and visibility.</p>
+        <div id="update-course-list"></div>`;
+      const container = document.getElementById('update-course-list');
+      container.innerHTML = instructorCourses.map(c => `
+        <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
+            <h3 style="margin-top:0.3rem;">${c.title}</h3>
+          </div>
+          <button class="btn-secondary" onclick="renderUpdateForm('${c.id}')"><i data-lucide="pencil"></i> Edit</button>
+        </div>`).join('');
+    }
+
+    function renderUpdateForm(courseId) {
+      const course = instructorCourses.find(c => c.id == courseId);
+      if (!course) return;
+      const view = document.getElementById('content-view');
+      view.innerHTML = `
+        <button class="btn-secondary" onclick="setTab('update-course')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back</button>
+        <h1 class="page-title">Edit Course</h1>
+        <p class="page-desc">Update course details and visibility.</p>
+        <form onsubmit="handleUpdateCourse(event)">
+          <input type="hidden" id="edit-id" value="${course.id}">
+          <div class="form-group"><label>Course Title</label><input type="text" id="edit-title" value="${course.title}" required></div>
+          <div class="form-group"><label>Description</label><textarea id="edit-desc" rows="3" required>${course.description || ''}</textarea></div>
+          <div class="form-group"><label>Thumbnail URL</label><input type="text" id="edit-thumbnail" value="${course.thumbnail || ''}" placeholder="https://..."></div>
+          <div class="form-group"><label>Status</label>
+            <select id="edit-status">
+              <option value="published" ${course.status==='published'?'selected':''}>Published</option>
+              <option value="unpublished" ${course.status==='unpublished'?'selected':''}>Unpublished (Draft)</option>
+            </select>
+          </div>
+          <p id="updateSuccess" class="success-text" hidden></p>
+          <button type="submit" class="btn">Save Changes</button>
+        </form>`;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function handleUpdateCourse(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-id').value;
+      const title = document.getElementById('edit-title').value;
+      const description = document.getElementById('edit-desc').value;
+      const thumbnail = document.getElementById('edit-thumbnail').value;
+      const status = document.getElementById('edit-status').value;
+      try {
+        await updateCourseApi(id, {
+          title,
+          description,
+          published: status === 'published',
+          thumbnail
+        });
+        const s = document.getElementById('updateSuccess');
+        s.textContent = 'Course updated successfully!';
+        s.hidden = false;
+        await fetchInstructorCourses();
+        setTimeout(() => setTab('all-courses'), 700);
+      } catch (err) {
+        alert(err.message || 'Failed to update course');
+      }
+    }
+
+    async function deleteCourseAction(courseId) {
+      if (!confirm('Delete this course and all its lessons? This cannot be undone.')) return;
+      try {
+        await deleteCourseApi(courseId);
+        await fetchInstructorCourses();
+      } catch (err) {
+        alert(err.message || 'Failed to delete course');
+      }
+    }
+
+    function openManageLessons(courseId) {
+      managedCourseId = courseId;
+      editingLessonId = null;
+      setTab('manage-lessons');
+    }
+
+    function renderManageLessons(view) {
+      const course = instructorCourses.find(c => c.id === managedCourseId);
+      view.innerHTML = `
+        <button class="btn-secondary" onclick="setTab('all-courses')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Courses</button>
+        <h1 class="page-title">Manage Lessons</h1>
+        <p class="page-desc">Course: ${course ? course.title : 'Unknown'}</p>
+
+        <h3>Add / Edit Lesson</h3>
+        <form onsubmit="handleLessonSubmit(event)" id="lesson-form">
+          <input type="hidden" id="lesson-edit-id">
+          <div class="form-group"><label>Title</label><input type="text" id="lesson-title" placeholder="e.g. Introduction to HTML" required></div>
+          <div class="form-group"><label>Content</label><textarea id="lesson-content" rows="3" placeholder="Lesson content, notes or video link"></textarea></div>
+          <div class="form-group"><label>Description</label><textarea id="lesson-desc" rows="2" placeholder="Short summary"></textarea></div>
+          <div class="form-group"><label>Order Index</label><input type="number" id="lesson-order" value="0" min="0"></div>
+          <button type="submit" class="btn" id="lesson-submit">Add Lesson</button>
+        </form>
+
+        <h3 style="margin-top:1.5rem;">Lessons</h3>
+        <div id="lessons-manage-list"><p style="color:var(--text-secondary);">Loading lessons from server...</p></div>`;
+      if (window.lucide) lucide.createIcons();
+      refreshLessons();
+    }
+
+    async function refreshLessons() {
+      const container = document.getElementById('lessons-manage-list');
+      if (!container) return;
+      try {
+        managedLessons = await getLessonsByCourse(managedCourseId);
+      } catch (err) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">Failed to load lessons.</p>';
+        return;
+      }
+      if (!managedLessons.length) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">No lessons yet. Add the first lesson above.</p>';
+        return;
+      }
+      container.innerHTML = managedLessons.map(l => `
+        <div class="lesson-item">
+          <div>
+            <strong>${l.order_index != null ? l.order_index + '. ' : ''}${l.title}</strong>
+            ${l.description ? `<p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.2rem;">${l.description}</p>` : ''}
+          </div>
+          <div style="display:flex;gap:0.4rem;">
+            <button class="btn-secondary" onclick="openEditLesson('${l._id}')"><i data-lucide="pencil"></i> Edit</button>
+            <button class="btn-danger" onclick="deleteLessonAction('${l._id}')"><i data-lucide="trash-2"></i> Delete</button>
+          </div>
+        </div>`).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function handleLessonSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('lesson-title').value,
+        content: document.getElementById('lesson-content').value,
+        description: document.getElementById('lesson-desc').value,
+        course_id: managedCourseId,
+        order_index: Number(document.getElementById('lesson-order').value || 0)
+      };
+      const editId = document.getElementById('lesson-edit-id').value;
+      try {
+        if (editId) {
+          await updateLessonApi(editId, payload);
+        } else {
+          await createLessonApi(payload);
+        }
+        e.target.reset();
+        document.getElementById('lesson-edit-id').value = '';
+        document.getElementById('lesson-order').value = 0;
+        document.getElementById('lesson-submit').textContent = 'Add Lesson';
+        await refreshLessons();
+      } catch (err) {
+        alert(err.message || 'Failed to save lesson');
+      }
+    }
+
+    function openEditLesson(lessonId) {
+      const l = managedLessons.find(x => x._id == lessonId);
+      if (!l) return;
+      document.getElementById('lesson-edit-id').value = l._id;
+      document.getElementById('lesson-title').value = l.title;
+      document.getElementById('lesson-content').value = l.content || '';
+      document.getElementById('lesson-desc').value = l.description || '';
+      document.getElementById('lesson-order').value = l.order_index ?? 0;
+      document.getElementById('lesson-submit').textContent = 'Save Changes';
+      document.getElementById('lesson-title').focus();
+    }
+
+    async function deleteLessonAction(lessonId) {
+      if (!confirm('Delete this lesson?')) return;
+      try {
+        await deleteLessonApi(lessonId);
+        await refreshLessons();
+      } catch (err) {
+        alert(err.message || 'Failed to delete lesson');
+      }
+    }
+
+    function openStudents(courseId) {
+      selectedStudentsCourseId = courseId;
+      setTab('students');
+    }
+
+    async function renderStudents(view) {
+      const course = instructorCourses.find(c => c.id === selectedStudentsCourseId);
+      view.innerHTML = `
+        <button class="btn-secondary" onclick="setTab('all-courses')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Courses</button>
+        <h1 class="page-title">Students</h1>
+        <p class="page-desc">Enrolled students for: ${course ? course.title : 'Unknown'}</p>
+        <div id="students-list"><p style="color:var(--text-secondary);">Loading roster from server...</p></div>`;
+      if (window.lucide) lucide.createIcons();
+      try {
+        const enrollments = await getEnrollmentsForCourse(selectedStudentsCourseId);
+        const c = document.getElementById('students-list');
+        if (!enrollments.length) {
+          c.innerHTML = '<p style="color:var(--text-secondary);">No students enrolled yet.</p>';
+          return;
+        }
+        c.innerHTML = enrollments.map(e => `
+          <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+              <strong>${e.student_id?.name || 'Student'}</strong>
+              <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${e.student_id?.email || ''}</p>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:0.85rem; color:var(--text-secondary);">Enrolled: ${e.enrolled_date ? new Date(e.enrolled_date).toLocaleDateString() : ''}</span>
+            </div>
+          </div>`).join('');
+      } catch (err) {
+        document.getElementById('students-list').innerHTML = '<p style="color:var(--text-secondary);">Failed to load students.</p>';
+      }
+    }
+
     async function handleCreateCourse(e) {
       e.preventDefault();
-      const token = localStorage.getItem("token");
       const title = document.getElementById('new-title').value;
-      const category = document.getElementById('new-category').value;
       const status = document.getElementById('new-status').value;
       const description = document.getElementById('new-desc').value;
+      const thumbnail = document.getElementById('new-thumbnail').value;
       const btn = document.getElementById('btn-create');
 
       btn.disabled = true;
       btn.textContent = "Creating...";
 
       try {
-        const res = await fetch(COURSES_API, {
+        await apiFetch('/courses', {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ title, category, status, description })
+          body: JSON.stringify({ title, description, published: status === 'published', thumbnail })
         });
-
-        if (!res.ok) throw new Error("Failed to create course");
 
         const view = document.getElementById('content-view');
         const successEl = document.createElement('p');
@@ -508,11 +663,11 @@
     async function renderInstructorProgress() {
       const container = document.getElementById('instructor-progress-list');
       if (!container || !instructorCourses.length) {
-        if (container) container.innerHTML = '<p style="color:var(--text-muted);">No courses yet.</p>';
+        if (container) container.innerHTML = '<p style="color:var(--text-secondary);">No courses yet.</p>';
         return;
       }
 
-      container.innerHTML = '<p style="color:var(--text-muted);">Loading progress...</p>';
+      container.innerHTML = '<p style="color:var(--text-secondary);">Loading progress...</p>';
 
       try {
         const results = await Promise.all(
@@ -527,11 +682,11 @@
             <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
               <div>
                 <strong>${s.student?.name || 'Student'}</strong>
-                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.2rem;">${s.student?.email || ''}</p>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${s.student?.email || ''}</p>
               </div>
               <div style="text-align:right;">
                 <span style="color:var(--accent); font-weight:600;">${s.percentage}%</span>
-                <p style="color:var(--text-muted); font-size:0.8rem;">${s.completed_lessons}/${s.total_lessons} lessons</p>
+                <p style="color:var(--text-secondary); font-size:0.8rem;">${s.completed_lessons}/${s.total_lessons} lessons</p>
               </div>
             </div>
           `).join('');
@@ -542,12 +697,12 @@
                 <strong>${c.title}</strong>
                 <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
               </div>
-              ${studentRows || '<p style="color:var(--text-muted); font-size:0.85rem;">No enrolled students yet.</p>'}
+              ${studentRows || '<p style="color:var(--text-secondary); font-size:0.85rem;">No enrolled students yet.</p>'}
             </div>
           `;
         }).join('');
       } catch (err) {
-        container.innerHTML = '<p style="color:var(--text-muted);">Failed to load progress.</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary);">Failed to load progress.</p>';
       }
     }
 
@@ -558,27 +713,8 @@
       successEl.hidden = false;
     }
 
-    function handleUpdateCourse(e) {
-      e.preventDefault();
-      const select = document.getElementById('select-update');
-      const titleInput = document.getElementById('edit-title');
-      const statusInput = document.getElementById('edit-status');
-      if (!select || !titleInput) return;
-
-      const selectedOption = select.options[select.selectedIndex];
-      const courseId = select.value;
-      const course = instructorCourses.find(c => c.id == courseId);
-      if (course) {
-        course.title = titleInput.value;
-        course.status = statusInput.value;
-        const successEl = document.getElementById("updateSuccess");
-        if (successEl) {
-          successEl.textContent = "Course updated successfully!";
-          successEl.hidden = false;
-        }
-        fetchInstructorCourses();
-        setTab('all-courses');
-      }
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
     }
 
     function openDeleteModal() {
