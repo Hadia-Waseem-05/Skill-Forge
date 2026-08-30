@@ -133,7 +133,7 @@
     .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-secondary); }
     .form-group input, .form-group textarea, .form-group select {
       width: 100%;
-      padding: 0.75rem 1rem;
+      padding: 1rem 2rem;
       background: #FFFFFF;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -142,7 +142,7 @@
       outline: none;
       font-family: 'Inter', sans-serif;
     }
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    .form-group input:focus, .form-group select:focus {
       border-color: var(--primary);
     }
 
@@ -157,18 +157,6 @@
       margin-bottom: 0.6rem;
     }
     .lesson-item.active { border-color: var(--accent); }
-
-    .player-window {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      height: 260px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
 
     .badge-draft {
       background: rgba(245, 158, 11, 0.15);
@@ -240,6 +228,10 @@
     let selectedStudentsCourseId = null;
     let loading = true;
 
+    function escapeAttr(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     async function fetchInstructorCourses() {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -272,12 +264,12 @@
 
     function setTab(tab) {
       currentTab = tab;
-      if (tab !== 'manage-lessons' && tab !== 'students') {
+      if (tab !== 'manage-lessons' && tab !== 'students' && tab !== 'add-lesson') {
         managedCourseId = null;
         selectedStudentsCourseId = null;
       }
       document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
-      if (tab === 'all-courses' || tab === 'manage-lessons' || tab === 'students') document.getElementById('tab-all').classList.add('active');
+      if (tab === 'all-courses' || tab === 'manage-lessons' || tab === 'add-lesson' || tab === 'students') document.getElementById('tab-all').classList.add('active');
       if (tab === 'add-course') document.getElementById('tab-add').classList.add('active');
       if (tab === 'update-course') document.getElementById('tab-update').classList.add('active');
       if (tab === 'progress') document.getElementById('tab-prog').classList.add('active');
@@ -332,6 +324,8 @@
         renderUpdateCourseList(view);
       } else if (currentTab === 'manage-lessons') {
         renderManageLessons(view);
+      } else if (currentTab === 'add-lesson') {
+        renderAddLessonPage(view);
       } else if (currentTab === 'students') {
         renderStudents(view);
       } else if (currentTab === 'progress') {
@@ -386,13 +380,13 @@
       }
 
       container.innerHTML = filtered.map(c => `
-        <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 1rem;">
-          <div>
+        <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div style="flex:1; min-width:0;">
             <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
-            <h3 style="margin-top:0.3rem;">${c.title}</h3>
+            <h3 style="margin-top:0.3rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(c.title)}">${c.title}</h3>
             <p style="color:var(--text-secondary); font-size:0.85rem;">Category: ${c.category}</p>
           </div>
-          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; flex-shrink:0;">
             <button class="btn-secondary" onclick="renderUpdateForm('${c.id}')"><i data-lucide="pencil"></i> Edit</button>
             <button class="btn" onclick="openManageLessons('${c.id}')"><i data-lucide="list"></i> Lessons</button>
             <button class="btn-secondary" onclick="openStudents('${c.id}')"><i data-lucide="users"></i> Students</button>
@@ -417,11 +411,13 @@
       const container = document.getElementById('update-course-list');
       container.innerHTML = instructorCourses.map(c => `
         <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-          <div>
+          <div style="flex:1; min-width:0;">
             <span class="badge ${c.status==='published'?'badge-published':'badge-draft'}">${c.status}</span>
-            <h3 style="margin-top:0.3rem;">${c.title}</h3>
+            <h3 style="margin-top:0.3rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(c.title)}">${c.title}</h3>
           </div>
-          <button class="btn-secondary" onclick="renderUpdateForm('${c.id}')"><i data-lucide="pencil"></i> Edit</button>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; flex-shrink:0;">
+            <button class="btn-secondary" onclick="renderUpdateForm('${c.id}')"><i data-lucide="pencil"></i> Edit</button>
+          </div>
         </div>`).join('');
     }
 
@@ -494,23 +490,44 @@
       const course = instructorCourses.find(c => c.id === managedCourseId);
       view.innerHTML = `
         <button class="btn-secondary" onclick="setTab('all-courses')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Courses</button>
-        <h1 class="page-title">Manage Lessons</h1>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+          <h1 class="page-title" style="margin:0;">Manage Lessons</h1>
+          <button class="btn" onclick="openAddLesson()"><i data-lucide="plus"></i> Add New Lesson</button>
+        </div>
         <p class="page-desc">Course: ${course ? course.title : 'Unknown'}</p>
 
-        <h3>Add / Edit Lesson</h3>
-        <form onsubmit="handleLessonSubmit(event)" id="lesson-form">
-          <input type="hidden" id="lesson-edit-id">
-          <div class="form-group"><label>Title</label><input type="text" id="lesson-title" placeholder="e.g. Introduction to HTML" required></div>
-          <div class="form-group"><label>Content</label><textarea id="lesson-content" rows="3" placeholder="Lesson content, notes or video link"></textarea></div>
-          <div class="form-group"><label>Description</label><textarea id="lesson-desc" rows="2" placeholder="Short summary"></textarea></div>
-          <div class="form-group"><label>Order Index</label><input type="number" id="lesson-order" value="0" min="0"></div>
-          <button type="submit" class="btn" id="lesson-submit">Add Lesson</button>
-        </form>
-
-        <h3 style="margin-top:1.5rem;">Lessons</h3>
+        <h3 style="margin-top:1rem; margin-bottom:0.8rem;">Lessons</h3>
         <div id="lessons-manage-list"><p style="color:var(--text-secondary);">Loading lessons from server...</p></div>`;
       if (window.lucide) lucide.createIcons();
       refreshLessons();
+    }
+
+    function openAddLesson() {
+      editingLessonId = null;
+      setTab('add-lesson');
+    }
+
+    function renderAddLessonPage(view) {
+      const course = instructorCourses.find(c => c.id === managedCourseId);
+      const isEdit = !!editingLessonId;
+      const lesson = editingLessonId ? (managedLessons.find(x => (x._id || x.id) == editingLessonId) || { title: '', content: '', description: '', order_index: 0 }) : null;
+      const title = isEdit ? escapeAttr(lesson.title) : '';
+      const content = isEdit ? escapeAttr(lesson.content || '') : '';
+      const desc = isEdit ? escapeAttr(lesson.description || '') : '';
+      const order = isEdit ? (lesson.order_index ?? 0) : 0;
+      view.innerHTML = `
+        <button class="btn-secondary" onclick="setTab('manage-lessons')" style="margin-bottom:1rem;"><i data-lucide="arrow-left"></i> Back to Lessons</button>
+        <h1 class="page-title">${isEdit ? 'Edit Lesson' : 'Add New Lesson'}</h1>
+        <p class="page-desc">${course ? course.title : 'Course'}</p>
+        <form onsubmit="handleLessonSubmit(event)" id="lesson-form">
+          <input type="hidden" id="lesson-edit-id" value="${isEdit ? escapeAttr(lesson._id || lesson.id) : ''}">
+          <div class="form-group"><label>Title</label><input type="text" id="lesson-title" placeholder="e.g. Introduction to HTML" value="${title}" required></div>
+          <div class="form-group"><label>Content</label><textarea id="lesson-content" rows="3" placeholder="Lesson content, notes or video link">${content}</textarea></div>
+          <div class="form-group"><label>Description</label><textarea id="lesson-desc" rows="2" placeholder="Short summary">${desc}</textarea></div>
+          <div class="form-group"><label>Order Index</label><input type="number" id="lesson-order" value="${order}" min="0"></div>
+          <button type="submit" class="btn" id="lesson-submit">${isEdit ? 'Save Changes' : 'Add Lesson'}</button>
+        </form>`;
+      if (window.lucide) lucide.createIcons();
     }
 
     async function refreshLessons() {
@@ -556,26 +573,23 @@
         } else {
           await createLessonApi(payload);
         }
-        e.target.reset();
-        document.getElementById('lesson-edit-id').value = '';
-        document.getElementById('lesson-order').value = 0;
-        document.getElementById('lesson-submit').textContent = 'Add Lesson';
-        await refreshLessons();
+        setTab('manage-lessons');
       } catch (err) {
         alert(err.message || 'Failed to save lesson');
       }
     }
 
-    function openEditLesson(lessonId) {
-      const l = managedLessons.find(x => x._id == lessonId);
-      if (!l) return;
-      document.getElementById('lesson-edit-id').value = l._id;
-      document.getElementById('lesson-title').value = l.title;
-      document.getElementById('lesson-content').value = l.content || '';
-      document.getElementById('lesson-desc').value = l.description || '';
-      document.getElementById('lesson-order').value = l.order_index ?? 0;
-      document.getElementById('lesson-submit').textContent = 'Save Changes';
-      document.getElementById('lesson-title').focus();
+    async function openEditLesson(lessonId) {
+      editingLessonId = lessonId;
+      try {
+        const detail = await getLessonApi(lessonId);
+        if (detail) {
+          const idx = managedLessons.findIndex(x => (x._id || x.id) == lessonId);
+          if (idx >= 0) managedLessons[idx] = { ...managedLessons[idx], ...detail };
+          else managedLessons.push(detail);
+        }
+      } catch (e) { /* fall back to cached list */ }
+      setTab('add-lesson');
     }
 
     async function deleteLessonAction(lessonId) {
