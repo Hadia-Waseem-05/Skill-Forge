@@ -57,7 +57,7 @@ function initNavbar() {
                 ${icon("home")}
                 <span>Home</span>
             </a>
-            <a href="index.html#courses" class="bottom-nav-item nav-scroll-link" data-target="courses">
+            <a href="courses.html" class="bottom-nav-item nav-scroll-link" data-target="courses">
                 ${icon("courses")}
                 <span>Courses</span>
             </a>

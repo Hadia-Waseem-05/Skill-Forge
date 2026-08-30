@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Course - SkillForge</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+
+<div class="course-banner-wrap">
+    <img id="courseThumbnail" class="course-banner" src="" alt="Course thumbnail"/>
+</div>
+
+<div class="section-container">
+    <div id="courseErrorMsg" class="error-text" hidden></div>
+
+    <div class="course-detail-layout">
+        <div class="course-detail-main">
+            <h1 id="courseTitle" class="page-title"></h1>
+            <p class="course-duration">Duration: 3 months</p>
+            <p id="courseDescription" class="course-description"></p>
+
+            <h3 class="lessons-heading">Lessons</h3>
+            <ul id="lessonsList" class="lessons-list"></ul>
+        </div>
+
+        <aside class="course-detail-sidebar card">
+            <img id="instructorAvatar" class="instructor-avatar" src="" alt="Instructor avatar"/>
+            <h3 id="instructorName" class="instructor-name"></h3>
+            <p id="instructorBio" class="instructor-bio"></p>
+            <button id="enrollBtn" class="btn accent-btn">Enroll Now</button>
+        </aside>
+    </div>
+</div>
+
+<div id="footer-placeholder"></div>
+
+<script src="navbar.js"></script>
+<script src="course-details.js"></script>
+<script src="footer.js"></script>
+</body>
+</html>

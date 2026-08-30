@@ -21,6 +21,7 @@ async function loadCourses() {
         }
 
         grid.innerHTML = courses.map(renderCourseCard).join("");
+        attachCardHandlers();
         attachEnrollHandlers();
         setupScrollReveal();
 
@@ -35,7 +36,7 @@ async function loadCourses() {
 function renderCourseCard(course) {
     const thumbnail = course.thumbnail || "https://placehold.co/600x400/D6E6F2/333333?text=Course";
     return `
-        <div class="course-card">
+        <div class="course-card" data-course-id="${course._id}">
             <img src="${thumbnail}" alt="${course.title}" class="course-thumbnail">
             <h3>${course.title}</h3>
             <p>${course.description || ""}</p>
@@ -46,9 +47,21 @@ function renderCourseCard(course) {
     `;
 }
 
+function attachCardHandlers() {
+    document.querySelectorAll(".course-card").forEach((card) => {
+        card.addEventListener("click", () => {
+            const courseId = card.dataset.courseId;
+            window.location.href = `course-details.html?id=${courseId}`;
+        });
+    });
+}
+
 function attachEnrollHandlers() {
     document.querySelectorAll(".enroll-btn").forEach((btn) => {
-        btn.addEventListener("click", () => handleEnroll(btn));
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation(); 
+            handleEnroll(btn);
+        });
     });
 }
 
@@ -70,18 +83,31 @@ function setupScrollReveal() {
     });
 }
 
+function showCoursesError(message) {
+    const errorEl = document.getElementById("coursesError");
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+    errorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function hideCoursesError() {
+    document.getElementById("coursesError").hidden = true;
+}
+
 async function handleEnroll(btn) {
+    hideCoursesError();
+
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
     const courseId = btn.dataset.courseId;
 
     if (!token) {
-        window.location.href = "login.html";
+        showCoursesError("Please login to enroll in this course.");
         return;
     }
 
     if (role === "instructor") {
-        alert("Instructors can't enroll in courses.");
+        showCoursesError("Instructors can't enroll in a course.");
         return;
     }
 
@@ -96,7 +122,7 @@ async function handleEnroll(btn) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-                body: JSON.stringify({ course_id: courseId })
+            body: JSON.stringify({ course_id: courseId })
         });
 
         const data = await res.json();
@@ -113,7 +139,7 @@ async function handleEnroll(btn) {
         console.error(err);
         btn.disabled = false;
         btn.textContent = originalText;
-        alert(err.message || "Something went wrong enrolling in this course.");
+        showCoursesError(err.message || "Something went wrong enrolling in this course.");
     }
 }
 

@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import Users from "../models/Users.js";
 
-const generateToken = (userId) => {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+const generateToken = (userId, role) => {
+    return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
 export const register = async (req, res) => {
@@ -27,7 +27,7 @@ export const register = async (req, res) => {
          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
         });
          
-        const token = generateToken(user._id);
+        const token = generateToken(user._id, user.role);
 
         res.status(201).json({
             message: "Account has been created successfully!",
@@ -66,7 +66,7 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: "User not found" });
         }
 
-        const token = generateToken(user._id);
+        const token = generateToken(user._id, user.role);
 
         res.status(200).json({
             message: "Login successful",
