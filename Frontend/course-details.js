@@ -145,23 +145,43 @@ function initEnrollButton() {
             return;
         }
 
-        enrollBtn.disabled = true;
-        enrollBtn.textContent = "Enrolling...";
-
-        try {
-            await enrollInCourse(courseId);
-            showEnrollMessage("success");
-            setEnrolledState();
-        } catch (err) {
-            console.error(err);
-            showEnrollMessage("error");
-            enrollBtn.disabled = false;
-            enrollBtn.textContent = "Enroll Now";
-        }
+        openEnrollModal();
     });
+}
+
+function openEnrollModal() {
+    document.getElementById("enrollModal").hidden = false;
+}
+
+function closeEnrollModal() {
+    document.getElementById("enrollModal").hidden = true;
+}
+
+async function confirmEnroll() {
+    closeEnrollModal();
+    const enrollBtn = document.getElementById("enrollBtn");
+    enrollBtn.disabled = true;
+    enrollBtn.textContent = "Enrolling...";
+    const courseId = getCourseIdFromUrl();
+
+    try {
+        await enrollInCourse(courseId);
+        showEnrollMessage("success");
+        setEnrolledState();
+    } catch (err) {
+        console.error(err);
+        showEnrollMessage("error");
+        enrollBtn.disabled = false;
+        enrollBtn.textContent = "Enroll Now";
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     loadCourse();
     initEnrollButton();
+
+    const cancelBtn = document.getElementById("enrollCancelBtn");
+    const confirmBtn = document.getElementById("enrollConfirmBtn");
+    if (cancelBtn) cancelBtn.addEventListener("click", closeEnrollModal);
+    if (confirmBtn) confirmBtn.addEventListener("click", confirmEnroll);
 });

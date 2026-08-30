@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkillForge - Student Dashboard</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
       --primary: #4f46e5;
@@ -44,7 +45,11 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.2rem;
-      height: fit-content;
+      position: sticky;
+      top: 24px;
+      height: calc(100vh - 48px);
+      display: flex;
+      flex-direction: column;
     }
     .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
     .sidebar-menu li button {
@@ -69,7 +74,7 @@
     }
 
     .sidebar-delete-wrap {
-      margin-top: 24px;
+      margin-top: auto;
       padding-top: 16px;
       border-top: 1px solid var(--border);
     }
@@ -77,6 +82,9 @@
     .sidebar-delete-btn {
       width: 100%;
     }
+
+    .sidebar svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .content-area svg { width: 16px; height: 16px; vertical-align: middle; }
 
     .content-area {
       flex: 1;
@@ -210,7 +218,7 @@
       border: 1px solid var(--success);
     }
 
-    .modal-overlay {
+    .modal-overlay:not([hidden]) {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
@@ -268,32 +276,33 @@
 
     @media (max-width: 850px) {
       .main-layout { flex-direction: column; }
-      .sidebar { width: 100%; }
+      .sidebar { width: 100%; position: static; top: auto; height: auto; display: block; }
     }
   </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div id="navbar"></div>
+  <div id="navbar-placeholder"></div>
 
   <div class="main-layout">
     <aside class="sidebar">
       <ul class="sidebar-menu">
-        <li><button id="tab-profile" onclick="setTab('student-profile')">👤 My Profile</button></li>
-        <li><button id="tab-courses" class="active" onclick="setTab('my-courses')">📚 My Courses</button></li>
-        <li><button id="tab-progress" onclick="setTab('progress-tracking')">📊 Progress Tracking</button></li>
-        <li><button id="tab-quiz" onclick="setTab('quiz-cert')">🏆 Quiz & Certificates</button></li>
+        <li><button id="tab-profile" onclick="setTab('student-profile')"><i data-lucide="user"></i> My Profile</button></li>
+        <li><button id="tab-courses" class="active" onclick="setTab('my-courses')"><i data-lucide="book-open"></i> My Courses</button></li>
+        <li><button id="tab-progress" onclick="setTab('progress-tracking')"><i data-lucide="bar-chart-2"></i> Progress Tracking</button></li>
+        <li><button id="tab-quiz" onclick="setTab('quiz-cert')"><i data-lucide="award"></i> Quiz &amp; Certificates</button></li>
       </ul>
 
       <div class="sidebar-delete-wrap">
-        <button class="btn-danger sidebar-delete-btn" onclick="openDeleteModal()">🗑 Delete Account</button>
+        <button class="btn-danger sidebar-delete-btn" onclick="openDeleteModal()"><i data-lucide="trash-2"></i> Delete Account</button>
       </div>
     </aside>
 
     <main class="content-area" id="content-view"></main>
   </div>
 
-  <div id="footer"></div>
+  <div id="footer-placeholder"></div>
 
   <script src="navbar.js"></script>
   <script src="footer.js"></script>
@@ -438,7 +447,7 @@
             <p class="page-desc">${course.description}</p>
 
             <div class="player-window">
-              <p style="font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 0.4rem;">▶ Playing: ${currentLesson.title}</p>
+              <p style="font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 0.4rem;"><i data-lucide="play"></i> Playing: ${currentLesson.title}</p>
               <p style="color: var(--text-muted); font-size: 0.9rem;">Duration: ${currentLesson.duration}</p>
             </div>
 
@@ -446,11 +455,11 @@
               <div>
                 <strong>Current Lesson:</strong> <span style="color: var(--text-muted);">${currentLesson.title}</span>
                 <div style="font-size: 0.85rem; margin-top: 0.2rem; color: ${currentLesson.completed ? 'var(--success)' : 'var(--warning)'};">
-                  ${currentLesson.completed ? '✓ Status: Completed' : '⏳ Status: In Progress'}
+                  ${currentLesson.completed ? '<i data-lucide="check-circle"></i> Status: Completed' : '<i data-lucide="clock"></i> Status: In Progress'}
                 </div>
               </div>
               <button class="btn-success" onclick="toggleComplete('${course.id}', ${currentLesson.id})">
-                ${currentLesson.completed ? '✓ Completed (Click to Undo)' : '✔ Mark as Completed'}
+                ${currentLesson.completed ? '<i data-lucide="check-circle"></i> Completed (Click to Undo)' : '<i data-lucide="check-circle"></i> Mark as Completed'}
               </button>
             </div>
 
@@ -462,7 +471,7 @@
                   <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">(${l.duration})</span>
                 </div>
                 <div>
-                  ${l.completed ? '<span style="color: var(--success); font-size: 0.85rem; font-weight: 700; margin-right: 0.6rem;">✓ Done</span>' : ''}
+                  ${l.completed ? '<span style="color: var(--success); font-size: 0.85rem; font-weight: 700; margin-right: 0.6rem;"><i data-lucide="check"></i> Done</span>' : ''}
                   <button class="btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;" onclick="playLesson(${l.id})">Play</button>
                 </div>
               </div>
@@ -512,6 +521,8 @@
           </div>
         `;
       }
+
+      if (window.lucide) lucide.createIcons();
     }
 
     function openCourse(id) { selectedCourseId = id; selectedLessonId = 1; renderContent(); }
@@ -568,6 +579,7 @@
     }
 
     fetchStudentEnrollments();
+    if (window.lucide) lucide.createIcons();
   </script>
 
   <div id="deleteModal" class="modal-overlay" hidden>

@@ -188,8 +188,11 @@ async function updateCourseCards() {
     });
 }
 
+let pendingEnrollCourseId = null;
+
 async function handleEnroll(btn) {
     hideCoursesError();
+    hideEnrollSuccess();
 
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
@@ -201,28 +204,65 @@ async function handleEnroll(btn) {
     }
 
     if (role === "instructor") {
-        showCoursesError("Instructors can't enroll in a course.");
+        showCoursesError("Instructors cannot enroll in courses.");
         return;
     }
 
-    const originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "Enrolling...";
+    pendingEnrollCourseId = courseId;
+    openEnrollModal();
+}
+
+function openEnrollModal() {
+    document.getElementById("enrollModal").hidden = false;
+}
+
+function closeEnrollModal() {
+    document.getElementById("enrollModal").hidden = true;
+}
+
+async function confirmEnroll() {
+    closeEnrollModal();
+    const courseId = pendingEnrollCourseId;
+    if (!courseId) return;
+
+    const btn = document.querySelector(`.enroll-btn[data-course-id="${courseId}"]`);
+    const originalText = btn ? btn.textContent : "Enroll Now";
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Enrolling...";
+    }
 
     try {
         await enrollInCourse(courseId);
-
-        btn.textContent = "Enrolled ✓";
-        btn.classList.add("enrolled-btn");
-        btn.classList.remove("accent-btn");
-
+        hideCoursesError();
+        showEnrollSuccess();
         updateCourseCards();
     } catch (err) {
         console.error(err);
-        btn.disabled = false;
-        btn.textContent = originalText;
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
         showCoursesError(err.message || "Something went wrong enrolling in this course.");
     }
 }
 
-document.addEventListener("DOMContentLoaded", loadCourses);
+function showEnrollSuccess() {
+    const el = document.getElementById("enrollSuccess");
+    el.textContent = "Congrats! You are enrolled in this course.";
+    el.hidden = false;
+}
+
+function hideEnrollSuccess() {
+    const el = document.getElementById("enrollSuccess");
+    if (el) el.hidden = true;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadCourses();
+
+    const cancelBtn = document.getElementById("enrollCancelBtn");
+    const confirmBtn = document.getElementById("enrollConfirmBtn");
+    if (cancelBtn) cancelBtn.addEventListener("click", closeEnrollModal);
+    if (confirmBtn) confirmBtn.addEventListener("click", confirmEnroll);
+});
