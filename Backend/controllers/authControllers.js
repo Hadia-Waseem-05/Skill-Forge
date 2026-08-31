@@ -1,3 +1,6 @@
+import crypto from "crypto";
+import sendEmail from "../config/sendEmail.js";
+
 import jwt from "jsonwebtoken";
 import Users from "../models/Users.js";
 
@@ -105,7 +108,6 @@ export const delUser = async (req, res) => {
 
 export const getUser = async (req, res) => {
     try {
-        console.log("❌ GET USER (/:id) ROUTE HIT — params.id =", req.params.id);
         const { id } = req.params;
         if(req.user.id !== id){
         return res.status(403).json({status: false, message: "You are not aunthorized"})
@@ -156,7 +158,6 @@ export const updateUser = async (req, res) => {
 };
 
 export const verifyUser = async ( req, res, next ) => {
-    console.log("✅ VERIFY MIDDLEWARE HIT — path =", req.originalUrl);
     const token = req.headers.authorization?.split(" ")[1];
 
     if(!token){
@@ -183,6 +184,80 @@ export const verifyInstructor = async (req, res, next) => {
 
         next();
     } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || email.trim() === "") {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const cleanEmail = email.trim().toLowerCase();
+        const user = await Users.findOne({ email: cleanEmail });
+
+        if (!user) {
+            return res.status(404).json({ status: false, message: "No account found with this email" });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+        await user.save();
+
+        const resetLink = `http://localhost:5500/reset-password.html?token=${resetToken}`;
+
+        const emailHtml = `
+            <h2>Password Reset Request</h2>
+            <p>You requested a password reset for your SkillForge account.</p>
+            <p>Click the link below to reset your password. This link is valid for 15 minutes.</p>
+            <a href="${resetLink}">${resetLink}</a>
+            <p>If you did not request this, please ignore this email.</p>
+        `;
+
+        await sendEmail(user.email, "SkillForge - Password Reset", emailHtml);
+
+        res.status(200).json({ status: true, message: "Password reset link sent to your email" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword || newPassword.trim() === "") {
+            return res.status(400).json({ message: "Token and new password are required" });
+        }
+
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        const user = await Users.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({ status: false, message: "Invalid or expired reset token" });
+        }
+
+        user.password = newPassword;
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+        await user.save();
+
+        res.status(200).json({ status: true, message: "Password has been reset successfully" });
+
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
