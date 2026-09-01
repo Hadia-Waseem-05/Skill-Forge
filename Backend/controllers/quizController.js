@@ -66,7 +66,7 @@ const getQuizAttemptStatus = async (req, res) => {
         if (!attempts.length) {
             return res.status(200).json({
                 status: true,
-                data: { attempted: false, passed: false, score: null, total: null },
+                data: { attempted: false, passed: false, score: null, total: null, submitted_at: null },
             });
         }
 
@@ -78,6 +78,7 @@ const getQuizAttemptStatus = async (req, res) => {
                 passed: latest.passed,
                 score: latest.score,
                 total: latest.total,
+                submitted_at: latest.submitted_at,
             },
         });
     } catch (error) {

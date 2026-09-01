@@ -49,6 +49,21 @@ async function deleteAccount(userId) {
     return apiFetch(`/auth/${userId}`, { method: "DELETE" });
 }
 
+async function getUserProfile() {
+    const userId = localStorage.getItem("userId");
+    const data = await apiFetch(`/auth/${userId}`);
+    return data.data || data;
+}
+
+async function updateUserProfile(payload) {
+    const userId = localStorage.getItem("userId");
+    const data = await apiFetch(`/auth/${userId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+    });
+    return data.data || data;
+}
+
 // ---- Courses (instructor) ----
 async function getMyCoursesApi() {
     const data = await apiFetch(`/courses/my`);
@@ -123,6 +138,11 @@ async function getQuizForCourse(courseId) {
     return data.data || data;
 }
 
+async function getCourseById(courseId) {
+    const data = await apiFetch(`/courses/${courseId}`);
+    return data.data || data;
+}
+
 async function submitQuizAnswers(courseId, answers) {
     const data = await apiFetch(`/quiz/${courseId}/submit`, {
         method: "POST",
@@ -133,7 +153,7 @@ async function submitQuizAnswers(courseId, answers) {
 
 async function getQuizAttemptStatus(courseId) {
     const data = await apiFetch(`/quiz/${courseId}/status`);
-    return data.data || { attempted: false, passed: false, score: null, total: null };
+    return data.data || { attempted: false, passed: false, score: null, total: null, submitted_at: null };
 }
 
 // Instructor quiz management

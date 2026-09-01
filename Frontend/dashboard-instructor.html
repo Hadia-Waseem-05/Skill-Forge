@@ -47,7 +47,7 @@
       text-align: left;
       padding: 0.75rem 1rem;
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
       color: var(--text-secondary);
       border-radius: 10px;
       font-weight: 600;
@@ -291,7 +291,7 @@
           <p class="page-desc">Filter and manage all your published and unpublished course modules.</p>
 
           <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-            <input type="text" id="course-search" class="form-group" style="flex:1; margin:0;" placeholder="Search courses by title..." oninput="filterCourses()">
+            <input type="text" id="course-search" class="form-group" style="flex:1; margin:0; padding: 0.95rem 1rem;" placeholder="Search courses by title..." oninput="filterCourses()">
             <select id="status-filter" style="width: auto;" onchange="filterCourses()">
               <option value="all">All Courses</option>
               <option value="published">Published</option>
@@ -343,24 +343,7 @@
         `;
         renderInstructorProgress();
       } else if (currentTab === 'profile') {
-        const username = localStorage.getItem('username') || 'Instructor';
-        const userEmail = localStorage.getItem('email') || 'instructor@skillforge.com';
-        const userId = localStorage.getItem('userId');
-
-        view.innerHTML = `
-          <h1 class="page-title">Instructor Profile</h1>
-          <p class="page-desc">Manage your public bio and teaching credentials.</p>
-          <p id="profileSuccess" class="success-text" hidden></p>
-          <form onsubmit="handleInstructorProfileSave(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group"><label>Full Name</label><input type="text" value="${username}" required></div>
-              <div class="form-group"><label>Email Address</label><input type="email" value="${userEmail}" required></div>
-            </div>
-            <div class="form-group"><label>Headline</label><input type="text" value="Senior Web Development Instructor"></div>
-            <div class="form-group"><label>Bio</label><textarea rows="4">Delivering quality programming courses on SkillForge.</textarea></div>
-            <button type="submit" class="btn">Save Profile</button>
-          </form>
-        `;
+        renderInstructorProfile();
       }
     }
 
@@ -695,7 +678,7 @@
               <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
                 <input type="text" name="option_text" value="${escapeAttr(opt)}" placeholder="Option ${oi + 1}" required style="flex:1;">
                 <label style="display:flex; align-items:center; gap:0.3rem; flex-shrink:0; cursor:pointer;">
-                  <input type="radio" name="correct_answer" value="${oi}" ${q.correctAnswer === opt ? 'checked' : ''}> Correct
+                  <input type="radio" name="correct_answer_${qi}" value="${oi}" ${q.correctAnswer === opt ? 'checked' : ''}> Correct
                 </label>
                 ${opts.length > 2 ? `<button type="button" class="btn-danger" onclick="removeQuizOption(${qi}, ${oi})" style="padding:0.2rem 0.5rem; font-size:0.75rem;"><i data-lucide="x"></i></button>` : ''}
               </div>
@@ -712,9 +695,10 @@
       quizEditorQuestions = [];
       const cards = container.querySelectorAll('[id^="question-"]');
       cards.forEach(card => {
+        const qi = parseInt(card.id.replace('question-', ''), 10);
         const textInput = card.querySelector('input[name="question_text"]');
         const optionInputs = card.querySelectorAll('input[name="option_text"]');
-        const correctRadio = card.querySelector('input[name="correct_answer"]:checked');
+        const correctRadio = card.querySelector(`input[name="correct_answer_${qi}"]:checked`);
         const correctIdx = correctRadio ? parseInt(correctRadio.value) : -1;
         quizEditorQuestions.push({
           questionText: textInput ? textInput.value : '',
@@ -920,11 +904,76 @@
       }
     }
 
-    function handleInstructorProfileSave(e) {
+    function updateAvatarPreview() {
+      const input = document.getElementById('profile-avatar');
+      const img = document.getElementById('avatar-preview');
+      if (input && img) {
+        img.src = input.value || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+      }
+    }
+
+    async function renderInstructorProfile() {
+      const view = document.getElementById('content-view');
+      if (!view) return;
+      view.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 3rem;">Loading profile...</p>`;
+
+      let name = localStorage.getItem('name') || 'Instructor';
+      let email = localStorage.getItem('email') || '';
+      let bio = localStorage.getItem('bio') || '';
+      let avatar = localStorage.getItem('avatar') || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+
+      try {
+        const user = await getUserProfile();
+        if (user) {
+          name = user.name || name;
+          email = user.email || email;
+          bio = user.bio || bio;
+          avatar = user.avatar || avatar;
+        }
+      } catch (err) {
+        console.error("Profile fetch failed:", err);
+      }
+
+      view.innerHTML = `
+          <h1 class="page-title">Instructor Profile</h1>
+          <p class="page-desc">Manage your public bio and teaching credentials.</p>
+          <p id="profileSuccess" class="success-text" hidden></p>
+          <form onsubmit="handleInstructorProfileSave(event)">
+            <div style="display:flex; align-items:flex-start; gap:1.5rem; margin-bottom:1rem;">
+              <img id="avatar-preview" src="${escapeAttr(avatar)}" alt="Avatar" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
+              <div class="form-group" style="flex:1; margin:0;">
+                <label>Avatar URL</label>
+                <input type="url" id="profile-avatar" value="${escapeAttr(avatar)}" onchange="updateAvatarPreview()">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group"><label>Full Name</label><input type="text" id="profile-name" value="${escapeAttr(name)}" required></div>
+              <div class="form-group"><label>Email Address</label><input type="email" id="profile-email" value="${escapeAttr(email)}" required></div>
+            </div>
+            <div class="form-group"><label>Bio</label><textarea id="profile-bio" rows="4">${escapeAttr(bio)}</textarea></div>
+            <button type="submit" class="btn">Save Profile</button>
+          </form>
+        `;
+    }
+
+    async function handleInstructorProfileSave(e) {
       e.preventDefault();
-      const successEl = document.getElementById("profileSuccess");
-      successEl.textContent = "Instructor profile saved!";
-      successEl.hidden = false;
+      const name = document.getElementById('profile-name').value.trim();
+      const avatar = document.getElementById('profile-avatar').value.trim() || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+      const bio = document.getElementById('profile-bio').value;
+      try {
+        const user = await updateUserProfile({ name, avatar, bio });
+        if (user) {
+          localStorage.setItem('name', user.name);
+          localStorage.setItem('avatar', user.avatar);
+          localStorage.setItem('bio', user.bio || '');
+        }
+        const successEl = document.getElementById("profileSuccess");
+        successEl.textContent = "Instructor profile saved!";
+        successEl.hidden = false;
+      } catch (err) {
+        alert(err.message || "Failed to save profile");
+      }
     }
 
     function toggleSidebar() {
@@ -965,6 +1014,7 @@
       localStorage.removeItem("avatar");
       localStorage.removeItem("username");
       localStorage.removeItem("email");
+      window.location.href = "login.html";
     }
 
     fetchInstructorCourses();
