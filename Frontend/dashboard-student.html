@@ -47,7 +47,7 @@
       text-align: left;
       padding: 0.75rem 1rem;
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
       color: var(--text-secondary);
       border-radius: 10px;
       font-weight: 600;
@@ -250,7 +250,7 @@
       justify-content: center;
       z-index: 1000;
     }
-    #quizModal.hidden { display: none; }
+    #quizModal[hidden] { display: none; }
     #quizModalBox {
       background: #FFFFFF;
       border-radius: var(--radius);
@@ -356,6 +356,7 @@
     let pendingComplete = null;
     let loading = true;
     let quizState = null;
+    let quizPromptCourseId = null;
 
     function escapeAttr(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -378,10 +379,11 @@
           const course = item.course_id || item.course || item;
           const cid = course._id || course.id;
 
-          const [lessons, lessonProgress, progress] = await Promise.all([
+          const [lessons, lessonProgress, progress, quizStatus] = await Promise.all([
             getLessonsByCourse(cid).catch(() => []),
             getLessonProgressForCourse(cid).catch(() => []),
             getCourseProgress(cid).catch(() => ({ percentage: 0, completed_lessons: 0, total_lessons: 0 })),
+            getQuizAttemptStatus(cid).catch(() => ({ attempted: false, passed: false, score: null, total: null, submitted_at: null })),
           ]);
 
           const lpMap = {};
@@ -412,7 +414,9 @@
             lessons: lessonsMapped,
             progress: progress.percentage || 0,
             completedLessons: progress.completed_lessons || 0,
-            totalLessons: progress.total_lessons || lessonsMapped.length || 0
+            totalLessons: progress.total_lessons || lessonsMapped.length || 0,
+            quizPassed: !!quizStatus.passed,
+            quizStatus: quizStatus
           };
         }));
 
@@ -447,24 +451,7 @@
       }
 
       if (currentTab === 'student-profile') {
-        const username = localStorage.getItem('username') || 'Student';
-        const userEmail = localStorage.getItem('email') || 'student@skillforge.com';
-        const userId = localStorage.getItem('userId');
-
-        view.innerHTML = `
-          <h1 class="page-title">Student Profile</h1>
-          <p class="page-desc">Manage your personal profile and learning track preferences.</p>
-          <p id="profileSuccess" class="success-text" hidden></p>
-          <form onsubmit="handleStudentProfileSave(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group"><label>Full Name</label><input type="text" value="${username}" required></div>
-              <div class="form-group"><label>Email Address</label><input type="email" value="${userEmail}" required></div>
-            </div>
-            <div class="form-group"><label>Target Track</label><input type="text" value="Full-Stack Web Engineering"></div>
-            <div class="form-group"><label>Bio</label><textarea rows="3">Learning on SkillForge platform.</textarea></div>
-            <button type="submit" class="btn">Save Changes</button>
-          </form>
-        `;
+        renderStudentProfile();
       } else if (currentTab === 'my-courses') {
         if (!enrolledCourses.length) {
           view.innerHTML = `
@@ -483,7 +470,7 @@
             <h1 class="page-title">My Enrolled Courses</h1>
             <p class="page-desc">Click any course to view curriculum lessons and launch video modules.</p>
             ${enrolledCourses.map(course => {
-              const percent = course.progress || 0;
+              const percent = cappedProgress(course);
               return `
                 <div class="card-item" style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
                   <div style="flex: 1; min-width: 250px;">
@@ -549,7 +536,12 @@
       } else if (currentTab === 'progress-tracking') {
         const total = enrolledCourses.reduce((sum, c) => sum + (c.totalLessons || c.lessons.length), 0);
         const done = enrolledCourses.reduce((sum, c) => sum + (c.completedLessons || 0), 0);
-        const overall = total > 0 ? Math.round((done / total) * 100) : 0;
+        const rawOverall = total > 0 ? Math.round((done / total) * 100) : 0;
+        const anyBlocked = enrolledCourses.some(c => {
+          const lessonsDone = (c.completedLessons || 0) >= (c.totalLessons || c.lessons.length || 0);
+          return lessonsDone && !c.quizPassed;
+        });
+        const overall = (rawOverall >= 100 && anyBlocked) ? 95 : rawOverall;
 
         view.innerHTML = `
           <h1 class="page-title">Progress Tracking</h1>
@@ -563,7 +555,7 @@
             <h3 style="margin: 1.5rem 0 1rem;">Course Progress Breakdown</h3>
             ${enrolledCourses.map(c => {
               const finished = c.completedLessons || 0;
-              const p = c.progress || 0;
+              const p = cappedProgress(c);
               return `
                 <div class="card-item">
                   <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
@@ -674,6 +666,7 @@
         l.completedDate = lp.completed_date || null;
       });
       renderContent();
+      setTimeout(checkQuizPrompt, 300);
     }
 
     function backToLessons() {
@@ -699,11 +692,76 @@
       }
     }
 
-    function handleStudentProfileSave(e) {
+    function updateAvatarPreview() {
+      const input = document.getElementById('profile-avatar');
+      const img = document.getElementById('avatar-preview');
+      if (input && img) {
+        img.src = input.value || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+      }
+    }
+
+    async function renderStudentProfile() {
+      const view = document.getElementById('content-view');
+      if (!view) return;
+      view.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 3rem;">Loading profile...</p>`;
+
+      let name = localStorage.getItem('name') || 'Student';
+      let email = localStorage.getItem('email') || '';
+      let bio = localStorage.getItem('bio') || '';
+      let avatar = localStorage.getItem('avatar') || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+
+      try {
+        const user = await getUserProfile();
+        if (user) {
+          name = user.name || name;
+          email = user.email || email;
+          bio = user.bio || bio;
+          avatar = user.avatar || avatar;
+        }
+      } catch (err) {
+        console.error("Profile fetch failed:", err);
+      }
+
+      view.innerHTML = `
+          <h1 class="page-title">Student Profile</h1>
+          <p class="page-desc">Manage your personal profile and learning preferences.</p>
+          <p id="profileSuccess" class="success-text" hidden></p>
+          <form onsubmit="handleStudentProfileSave(event)">
+            <div style="display:flex; align-items:flex-start; gap:1.5rem; margin-bottom:1rem;">
+              <img id="avatar-preview" src="${escapeAttr(avatar)}" alt="Avatar" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
+              <div class="form-group" style="flex:1; margin:0;">
+                <label>Avatar URL</label>
+                <input type="url" id="profile-avatar" value="${escapeAttr(avatar)}" onchange="updateAvatarPreview()">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group"><label>Full Name</label><input type="text" id="profile-name" value="${escapeAttr(name)}" required></div>
+              <div class="form-group"><label>Email Address</label><input type="email" id="profile-email" value="${escapeAttr(email)}" required></div>
+            </div>
+            <div class="form-group"><label>Bio</label><textarea id="profile-bio" rows="3">${escapeAttr(bio)}</textarea></div>
+            <button type="submit" class="btn">Save Changes</button>
+          </form>
+        `;
+    }
+
+    async function handleStudentProfileSave(e) {
       e.preventDefault();
-      const successEl = document.getElementById("profileSuccess");
-      successEl.textContent = "Profile updated successfully!";
-      successEl.hidden = false;
+      const name = document.getElementById('profile-name').value.trim();
+      const avatar = document.getElementById('profile-avatar').value.trim() || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+      const bio = document.getElementById('profile-bio').value;
+      try {
+        const user = await updateUserProfile({ name, avatar, bio });
+        if (user) {
+          localStorage.setItem('name', user.name);
+          localStorage.setItem('avatar', user.avatar);
+          localStorage.setItem('bio', user.bio || '');
+        }
+        const successEl = document.getElementById("profileSuccess");
+        successEl.textContent = "Profile updated successfully!";
+        successEl.hidden = false;
+      } catch (err) {
+        alert(err.message || "Failed to save profile");
+      }
     }
 
     function toggleSidebar() {
@@ -744,9 +802,50 @@
       localStorage.removeItem("avatar");
       localStorage.removeItem("username");
       localStorage.removeItem("email");
+      window.location.href = "login.html";
     }
 
     // ===================== QUIZ FLOW =====================
+
+    function cappedProgress(course) {
+      const raw = course.progress || 0;
+      if (raw >= 100 && !course.quizPassed) return 95;
+      return raw;
+    }
+
+    async function checkQuizPrompt() {
+      for (const c of enrolledCourses) {
+        const dismissed = localStorage.getItem(`quizPromptDismissed_${c.id}`);
+        if (dismissed) continue;
+
+        const lessonsDone = (c.completedLessons || 0) >= (c.totalLessons || c.lessons.length || 0);
+        if (!lessonsDone || c.quizPassed) continue;
+
+        quizPromptCourseId = c.id;
+        document.getElementById('quizPromptCourseName').textContent = c.title;
+        document.getElementById('quizPromptModal').hidden = false;
+        return;
+      }
+    }
+
+    function closeQuizPrompt() {
+      quizPromptCourseId = null;
+      document.getElementById('quizPromptModal').hidden = true;
+    }
+
+    function remindLaterQuizPrompt() {
+      if (quizPromptCourseId) {
+        localStorage.setItem(`quizPromptDismissed_${quizPromptCourseId}`, 'true');
+      }
+      closeQuizPrompt();
+    }
+
+    function confirmTakeQuiz() {
+      const cid = quizPromptCourseId;
+      if (cid) localStorage.removeItem(`quizPromptDismissed_${cid}`);
+      closeQuizPrompt();
+      if (cid) openTakeQuiz(cid);
+    }
 
     async function renderQuizStatus() {
       const container = document.getElementById('quiz-status-list');
@@ -771,7 +870,7 @@
         let buttonHtml = '';
 
         if (status.passed) {
-          buttonHtml = `<button class="btn btn-success" onclick="viewQuizResult('${c.id}')"><i data-lucide="award"></i> View Result (${status.score}/${status.total})</button>`;
+          buttonHtml = `<button class="btn btn-success" onclick="viewQuizResult('${c.id}')"><i data-lucide="award"></i> View Result (${status.score}/${status.total})</button> <a href="certificate.html?courseId=${c.id}" class="btn" style="margin-left:0.5rem;"><i data-lucide="file-text"></i> View Certificate</a>`;
         } else if (status.attempted) {
           buttonHtml = `<button class="btn btn-secondary" onclick="retryQuiz('${c.id}')"><i data-lucide="refresh-cw"></i> Retry Quiz (last: ${status.score}/${status.total})</button>`;
         } else if (lessonsDone) {
@@ -784,7 +883,7 @@
           <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
             <div>
               <strong>${c.title}</strong>
-              <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${c.progress}% complete • ${c.completedLessons}/${c.totalLessons || c.lessons.length} lessons</p>
+               <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${cappedProgress(c)}% complete • ${c.completedLessons}/${c.totalLessons || c.lessons.length} lessons</p>
             </div>
             ${buttonHtml}
           </div>
@@ -947,10 +1046,11 @@
             <div style="font-size:3rem; font-weight:700; color:${passed ? 'var(--success)' : 'var(--accent)'}; margin: 1.5rem 0;">
               ${score} / ${total}
             </div>
-            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:2rem;">
-              ${passed ? 'Congratulations! You passed the quiz and earned your certificate.' : `You scored ${score} out of ${total}. You need ${needed} to pass. Review and try again.`}
-            </p>
-            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
+             <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:2rem;">
+               ${passed ? 'Congratulations! You passed the quiz and earned your certificate.' : `You scored ${score} out of ${total}. You need ${needed} to pass. Review and try again.`}
+             </p>
+             ${passed ? `<a href="certificate.html?courseId=${courseId}" class="btn" style="margin-bottom:1rem;"><i data-lucide="file-text"></i> View Certificate</a>` : ''}
+             <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
           </div>
         `;
       } else {
@@ -978,9 +1078,10 @@
               ${status.score} / ${status.total}
             </div>
             <p style="color:var(--text-secondary); font-size:1.1rem;">
-              ${status.passed ? 'You passed this quiz!' : 'You have not passed yet. You can retry.'}
-            </p>
-            <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
+             ${status.passed ? 'You passed this quiz!' : 'You have not passed yet. You can retry.'}
+             </p>
+             ${status.passed ? `<a href="certificate.html?courseId=${courseId}" class="btn" style="margin-bottom:1rem;"><i data-lucide="file-text"></i> View Certificate</a>` : ''}
+             <button class="btn" onclick="setTab('quiz-cert')">Back to Quizzes</button>
           </div>
         `;
       } catch (err) {
@@ -1021,7 +1122,9 @@
       if (modal) modal.hidden = true;
     }
 
-    fetchStudentEnrollments();
+    fetchStudentEnrollments().then(() => {
+      setTimeout(checkQuizPrompt, 300);
+    });
     if (window.lucide) lucide.createIcons();
   </script>
 
@@ -1062,6 +1165,17 @@
       </div>
       <div style="padding:1rem; border-top:1px solid var(--border); text-align:right;">
         <button class="btn-secondary" onclick="closeQuizModal()">Exit Quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="quizPromptModal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <h3>Take Quiz</h3>
+      <p>Take quiz of "<span id="quizPromptCourseName" style="font-weight:600;color:var(--primary);"></span>"?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="remindLaterQuizPrompt()">Remind Me Later</button>
+        <button class="btn" onclick="confirmTakeQuiz()">Take Quiz</button>
       </div>
     </div>
   </div>

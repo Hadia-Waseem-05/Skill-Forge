@@ -47,7 +47,7 @@
       text-align: left;
       padding: 0.75rem 1rem;
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
       color: var(--text-secondary);
       border-radius: 10px;
       font-weight: 600;
@@ -201,6 +201,7 @@
         <li><button id="tab-all" class="active" onclick="setTab('all-courses')"><i data-lucide="book-open"></i> All Courses</button></li>
         <li><button id="tab-add" onclick="setTab('add-course')"><i data-lucide="plus"></i> Add New Course</button></li>
         <li><button id="tab-update" onclick="setTab('update-course')"><i data-lucide="pencil"></i> Update Courses</button></li>
+        <li><button id="tab-quizzes" onclick="setTab('manage-quizzes')"><i data-lucide="clipboard-list"></i> All Quizzes</button></li>
         <li><button id="tab-prog" onclick="setTab('progress')"><i data-lucide="bar-chart-2"></i> Course Progress</button></li>
         <li><button id="tab-prof" onclick="setTab('profile')"><i data-lucide="user"></i> Instructor Profile</button></li>
       </ul>
@@ -264,12 +265,13 @@
 
     function setTab(tab) {
       currentTab = tab;
-      if (tab !== 'manage-lessons' && tab !== 'students' && tab !== 'add-lesson' && tab !== 'manage-quiz') {
+      if (tab !== 'manage-lessons' && tab !== 'students' && tab !== 'add-lesson' && tab !== 'manage-quiz' && tab !== 'manage-quizzes') {
         managedCourseId = null;
         selectedStudentsCourseId = null;
       }
       document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
       if (tab === 'all-courses' || tab === 'manage-lessons' || tab === 'add-lesson' || tab === 'students' || tab === 'manage-quiz') document.getElementById('tab-all').classList.add('active');
+      if (tab === 'manage-quizzes') document.getElementById('tab-quizzes').classList.add('active');
       if (tab === 'add-course') document.getElementById('tab-add').classList.add('active');
       if (tab === 'update-course') document.getElementById('tab-update').classList.add('active');
       if (tab === 'progress') document.getElementById('tab-prog').classList.add('active');
@@ -280,7 +282,7 @@
     function renderContent() {
       const view = document.getElementById('content-view');
 
-      if (loading && (currentTab === 'all-courses' || currentTab === 'update-course')) {
+      if (loading && (currentTab === 'all-courses' || currentTab === 'update-course' || currentTab === 'manage-quizzes')) {
         view.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 3rem;">Loading instructor courses from server...</p>`;
         return;
       }
@@ -291,7 +293,7 @@
           <p class="page-desc">Filter and manage all your published and unpublished course modules.</p>
 
           <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-            <input type="text" id="course-search" class="form-group" style="flex:1; margin:0;" placeholder="Search courses by title..." oninput="filterCourses()">
+            <input type="text" id="course-search" class="form-group" style="flex:1; margin:0; padding: 0.95rem 1rem;" placeholder="Search courses by title..." oninput="filterCourses()">
             <select id="status-filter" style="width: auto;" onchange="filterCourses()">
               <option value="all">All Courses</option>
               <option value="published">Published</option>
@@ -328,6 +330,8 @@
         renderAddLessonPage(view);
       } else if (currentTab === 'manage-quiz') {
         renderManageQuiz(view);
+      } else if (currentTab === 'manage-quizzes') {
+        renderManageQuizzes(view);
       } else if (currentTab === 'students') {
         renderStudents(view);
       } else if (currentTab === 'progress') {
@@ -343,24 +347,7 @@
         `;
         renderInstructorProgress();
       } else if (currentTab === 'profile') {
-        const username = localStorage.getItem('username') || 'Instructor';
-        const userEmail = localStorage.getItem('email') || 'instructor@skillforge.com';
-        const userId = localStorage.getItem('userId');
-
-        view.innerHTML = `
-          <h1 class="page-title">Instructor Profile</h1>
-          <p class="page-desc">Manage your public bio and teaching credentials.</p>
-          <p id="profileSuccess" class="success-text" hidden></p>
-          <form onsubmit="handleInstructorProfileSave(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group"><label>Full Name</label><input type="text" value="${username}" required></div>
-              <div class="form-group"><label>Email Address</label><input type="email" value="${userEmail}" required></div>
-            </div>
-            <div class="form-group"><label>Headline</label><input type="text" value="Senior Web Development Instructor"></div>
-            <div class="form-group"><label>Bio</label><textarea rows="4">Delivering quality programming courses on SkillForge.</textarea></div>
-            <button type="submit" class="btn">Save Profile</button>
-          </form>
-        `;
+        renderInstructorProfile();
       }
     }
 
@@ -612,7 +599,8 @@
     let quizEditorQuestions = [];
     let existingQuiz = null;
 
-    function openManageQuiz() {
+    function openManageQuiz(courseId) {
+      if (courseId) managedCourseId = courseId;
       setTab('manage-quiz');
     }
 
@@ -695,7 +683,7 @@
               <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
                 <input type="text" name="option_text" value="${escapeAttr(opt)}" placeholder="Option ${oi + 1}" required style="flex:1;">
                 <label style="display:flex; align-items:center; gap:0.3rem; flex-shrink:0; cursor:pointer;">
-                  <input type="radio" name="correct_answer" value="${oi}" ${q.correctAnswer === opt ? 'checked' : ''}> Correct
+                  <input type="radio" name="correct_answer_${qi}" value="${oi}" ${q.correctAnswer === opt ? 'checked' : ''}> Correct
                 </label>
                 ${opts.length > 2 ? `<button type="button" class="btn-danger" onclick="removeQuizOption(${qi}, ${oi})" style="padding:0.2rem 0.5rem; font-size:0.75rem;"><i data-lucide="x"></i></button>` : ''}
               </div>
@@ -712,9 +700,10 @@
       quizEditorQuestions = [];
       const cards = container.querySelectorAll('[id^="question-"]');
       cards.forEach(card => {
+        const qi = parseInt(card.id.replace('question-', ''), 10);
         const textInput = card.querySelector('input[name="question_text"]');
         const optionInputs = card.querySelectorAll('input[name="option_text"]');
-        const correctRadio = card.querySelector('input[name="correct_answer"]:checked');
+        const correctRadio = card.querySelector(`input[name="correct_answer_${qi}"]:checked`);
         const correctIdx = correctRadio ? parseInt(correctRadio.value) : -1;
         quizEditorQuestions.push({
           questionText: textInput ? textInput.value : '',
@@ -785,7 +774,7 @@
           await createQuizApi(payload);
           alert('Quiz created successfully');
         }
-        await loadQuizForEdit();
+        setTab('manage-quizzes');
       } catch (err) {
         alert(err.message || 'Failed to save quiz');
       }
@@ -796,7 +785,88 @@
       try {
         await deleteQuizApi(managedCourseId);
         alert('Quiz deleted successfully');
-        await loadQuizForEdit();
+        setTab('manage-quizzes');
+      } catch (err) {
+        alert(err.message || 'Failed to delete quiz');
+      }
+     }
+
+    // ===================== QUIZ LISTING =====================
+
+    async function renderManageQuizzes(view) {
+      view.innerHTML = `
+        <h1 class="page-title" style="margin:0;">All Quizzes</h1>
+        <p class="page-desc">Quizzes you have created for your courses. Courses with existing quizzes can be edited or deleted. Courses without a quiz show a create option.</p>
+        <div id="quizzes-list">
+          <p style="color:var(--text-secondary);">Loading quizzes from server...</p>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      await loadAllQuizzes();
+    }
+
+    async function loadAllQuizzes() {
+      const container = document.getElementById('quizzes-list');
+      if (!container) return;
+
+      if (!instructorCourses.length) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">No courses available. Create a course first.</p>';
+        return;
+      }
+
+      container.innerHTML = '<p style="color:var(--text-secondary);">Checking quiz status for each course...</p>';
+
+      const items = await Promise.all(instructorCourses.map(async (c) => {
+        let quiz = null;
+        try {
+          quiz = await getQuizForCourse(c.id);
+        } catch (e) {
+          quiz = null;
+        }
+
+        const hasQuiz = quiz && quiz.questions && quiz.questions.length > 0;
+        const qCount = hasQuiz ? quiz.questions.length : 0;
+
+        if (hasQuiz) {
+          return `
+            <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div style="flex:1; min-width:0;">
+                <span class="badge badge-published">Quiz Active</span>
+                <h3 style="margin-top:0.3rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(c.title)}">${c.title}</h3>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${qCount} question${qCount !== 1 ? 's' : ''} configured</p>
+              </div>
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap; flex-shrink:0;">
+                <button class="btn-secondary" onclick="openManageQuiz('${c.id}')"><i data-lucide="edit-3"></i> Edit Quiz</button>
+                <button class="btn-danger" onclick="deleteQuizFromListing('${c.id}')"><i data-lucide="trash-2"></i> Delete</button>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div style="flex:1; min-width:0;">
+                <span class="badge badge-draft">No Quiz</span>
+                <h3 style="margin-top:0.3rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(c.title)}">${c.title}</h3>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">No quiz created yet for this course</p>
+              </div>
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap; flex-shrink:0;">
+                <button class="btn" onclick="openManageQuiz('${c.id}')"><i data-lucide="plus"></i> Create Quiz</button>
+              </div>
+            </div>
+          `;
+        }
+      }));
+
+      container.innerHTML = items.join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function deleteQuizFromListing(courseId) {
+      if (!confirm('Delete this quiz? All student attempt records will be removed. This cannot be undone.')) return;
+      try {
+        await deleteQuizApi(courseId);
+        alert('Quiz deleted successfully');
+        await loadAllQuizzes();
       } catch (err) {
         alert(err.message || 'Failed to delete quiz');
       }
@@ -920,11 +990,76 @@
       }
     }
 
-    function handleInstructorProfileSave(e) {
+    function updateAvatarPreview() {
+      const input = document.getElementById('profile-avatar');
+      const img = document.getElementById('avatar-preview');
+      if (input && img) {
+        img.src = input.value || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+      }
+    }
+
+    async function renderInstructorProfile() {
+      const view = document.getElementById('content-view');
+      if (!view) return;
+      view.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 3rem;">Loading profile...</p>`;
+
+      let name = localStorage.getItem('name') || 'Instructor';
+      let email = localStorage.getItem('email') || '';
+      let bio = localStorage.getItem('bio') || '';
+      let avatar = localStorage.getItem('avatar') || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+
+      try {
+        const user = await getUserProfile();
+        if (user) {
+          name = user.name || name;
+          email = user.email || email;
+          bio = user.bio || bio;
+          avatar = user.avatar || avatar;
+        }
+      } catch (err) {
+        console.error("Profile fetch failed:", err);
+      }
+
+      view.innerHTML = `
+          <h1 class="page-title">Instructor Profile</h1>
+          <p class="page-desc">Manage your public bio and teaching credentials.</p>
+          <p id="profileSuccess" class="success-text" hidden></p>
+          <form onsubmit="handleInstructorProfileSave(event)">
+            <div style="display:flex; align-items:flex-start; gap:1.5rem; margin-bottom:1rem;">
+              <img id="avatar-preview" src="${escapeAttr(avatar)}" alt="Avatar" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
+              <div class="form-group" style="flex:1; margin:0;">
+                <label>Avatar URL</label>
+                <input type="url" id="profile-avatar" value="${escapeAttr(avatar)}" onchange="updateAvatarPreview()">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group"><label>Full Name</label><input type="text" id="profile-name" value="${escapeAttr(name)}" required></div>
+              <div class="form-group"><label>Email Address</label><input type="email" id="profile-email" value="${escapeAttr(email)}" required></div>
+            </div>
+            <div class="form-group"><label>Bio</label><textarea id="profile-bio" rows="4">${escapeAttr(bio)}</textarea></div>
+            <button type="submit" class="btn">Save Profile</button>
+          </form>
+        `;
+    }
+
+    async function handleInstructorProfileSave(e) {
       e.preventDefault();
-      const successEl = document.getElementById("profileSuccess");
-      successEl.textContent = "Instructor profile saved!";
-      successEl.hidden = false;
+      const name = document.getElementById('profile-name').value.trim();
+      const avatar = document.getElementById('profile-avatar').value.trim() || 'https://api.dicebear.com/7.x/initials/svg?seed=User';
+      const bio = document.getElementById('profile-bio').value;
+      try {
+        const user = await updateUserProfile({ name, avatar, bio });
+        if (user) {
+          localStorage.setItem('name', user.name);
+          localStorage.setItem('avatar', user.avatar);
+          localStorage.setItem('bio', user.bio || '');
+        }
+        const successEl = document.getElementById("profileSuccess");
+        successEl.textContent = "Instructor profile saved!";
+        successEl.hidden = false;
+      } catch (err) {
+        alert(err.message || "Failed to save profile");
+      }
     }
 
     function toggleSidebar() {
@@ -965,6 +1100,7 @@
       localStorage.removeItem("avatar");
       localStorage.removeItem("username");
       localStorage.removeItem("email");
+      window.location.href = "login.html";
     }
 
     fetchInstructorCourses();

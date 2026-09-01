@@ -132,7 +132,7 @@ export const updateLesson = async (req, res) => {
         if (order_index !== undefined) updateData.order_index = order_index;
 
         const updated = await Lessons.findByIdAndUpdate(id, updateData, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true,
         });
 

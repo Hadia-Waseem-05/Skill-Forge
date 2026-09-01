@@ -95,7 +95,7 @@ export const updateCourse = async (req, res) => {
         if (thumbnail !== undefined) updateData.thumbnail = thumbnail;
 
         const updated = await Courses.findByIdAndUpdate(id, updateData, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true,
         }).populate("instructor_id", "name avatar");
 

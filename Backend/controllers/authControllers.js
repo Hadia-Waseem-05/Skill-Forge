@@ -144,7 +144,7 @@ export const updateUser = async (req, res) => {
         const updated = await Users.findByIdAndUpdate(
             id,
             updateData,
-            { new: true, runValidators: true }
+             { returnDocument: 'after', runValidators: true }
         ).select("-password");
 
         if (!updated) {
