@@ -201,6 +201,7 @@
         <li><button id="tab-all" class="active" onclick="setTab('all-courses')"><i data-lucide="book-open"></i> All Courses</button></li>
         <li><button id="tab-add" onclick="setTab('add-course')"><i data-lucide="plus"></i> Add New Course</button></li>
         <li><button id="tab-update" onclick="setTab('update-course')"><i data-lucide="pencil"></i> Update Courses</button></li>
+        <li><button id="tab-quizzes" onclick="setTab('manage-quizzes')"><i data-lucide="clipboard-list"></i> All Quizzes</button></li>
         <li><button id="tab-prog" onclick="setTab('progress')"><i data-lucide="bar-chart-2"></i> Course Progress</button></li>
         <li><button id="tab-prof" onclick="setTab('profile')"><i data-lucide="user"></i> Instructor Profile</button></li>
       </ul>
@@ -264,12 +265,13 @@
 
     function setTab(tab) {
       currentTab = tab;
-      if (tab !== 'manage-lessons' && tab !== 'students' && tab !== 'add-lesson' && tab !== 'manage-quiz') {
+      if (tab !== 'manage-lessons' && tab !== 'students' && tab !== 'add-lesson' && tab !== 'manage-quiz' && tab !== 'manage-quizzes') {
         managedCourseId = null;
         selectedStudentsCourseId = null;
       }
       document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
       if (tab === 'all-courses' || tab === 'manage-lessons' || tab === 'add-lesson' || tab === 'students' || tab === 'manage-quiz') document.getElementById('tab-all').classList.add('active');
+      if (tab === 'manage-quizzes') document.getElementById('tab-quizzes').classList.add('active');
       if (tab === 'add-course') document.getElementById('tab-add').classList.add('active');
       if (tab === 'update-course') document.getElementById('tab-update').classList.add('active');
       if (tab === 'progress') document.getElementById('tab-prog').classList.add('active');
@@ -280,7 +282,7 @@
     function renderContent() {
       const view = document.getElementById('content-view');
 
-      if (loading && (currentTab === 'all-courses' || currentTab === 'update-course')) {
+      if (loading && (currentTab === 'all-courses' || currentTab === 'update-course' || currentTab === 'manage-quizzes')) {
         view.innerHTML = `<p style="text-align:center; color: var(--text-secondary); padding: 3rem;">Loading instructor courses from server...</p>`;
         return;
       }
@@ -328,6 +330,8 @@
         renderAddLessonPage(view);
       } else if (currentTab === 'manage-quiz') {
         renderManageQuiz(view);
+      } else if (currentTab === 'manage-quizzes') {
+        renderManageQuizzes(view);
       } else if (currentTab === 'students') {
         renderStudents(view);
       } else if (currentTab === 'progress') {
@@ -595,7 +599,8 @@
     let quizEditorQuestions = [];
     let existingQuiz = null;
 
-    function openManageQuiz() {
+    function openManageQuiz(courseId) {
+      if (courseId) managedCourseId = courseId;
       setTab('manage-quiz');
     }
 
@@ -769,7 +774,7 @@
           await createQuizApi(payload);
           alert('Quiz created successfully');
         }
-        await loadQuizForEdit();
+        setTab('manage-quizzes');
       } catch (err) {
         alert(err.message || 'Failed to save quiz');
       }
@@ -780,7 +785,88 @@
       try {
         await deleteQuizApi(managedCourseId);
         alert('Quiz deleted successfully');
-        await loadQuizForEdit();
+        setTab('manage-quizzes');
+      } catch (err) {
+        alert(err.message || 'Failed to delete quiz');
+      }
+     }
+
+    // ===================== QUIZ LISTING =====================
+
+    async function renderManageQuizzes(view) {
+      view.innerHTML = `
+        <h1 class="page-title" style="margin:0;">All Quizzes</h1>
+        <p class="page-desc">Quizzes you have created for your courses. Courses with existing quizzes can be edited or deleted. Courses without a quiz show a create option.</p>
+        <div id="quizzes-list">
+          <p style="color:var(--text-secondary);">Loading quizzes from server...</p>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      await loadAllQuizzes();
+    }
+
+    async function loadAllQuizzes() {
+      const container = document.getElementById('quizzes-list');
+      if (!container) return;
+
+      if (!instructorCourses.length) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">No courses available. Create a course first.</p>';
+        return;
+      }
+
+      container.innerHTML = '<p style="color:var(--text-secondary);">Checking quiz status for each course...</p>';
+
+      const items = await Promise.all(instructorCourses.map(async (c) => {
+        let quiz = null;
+        try {
+          quiz = await getQuizForCourse(c.id);
+        } catch (e) {
+          quiz = null;
+        }
+
+        const hasQuiz = quiz && quiz.questions && quiz.questions.length > 0;
+        const qCount = hasQuiz ? quiz.questions.length : 0;
+
+        if (hasQuiz) {
+          return `
+            <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div style="flex:1; min-width:0;">
+                <span class="badge badge-published">Quiz Active</span>
+                <h3 style="margin-top:0.3rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(c.title)}">${c.title}</h3>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">${qCount} question${qCount !== 1 ? 's' : ''} configured</p>
+              </div>
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap; flex-shrink:0;">
+                <button class="btn-secondary" onclick="openManageQuiz('${c.id}')"><i data-lucide="edit-3"></i> Edit Quiz</button>
+                <button class="btn-danger" onclick="deleteQuizFromListing('${c.id}')"><i data-lucide="trash-2"></i> Delete</button>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="card-item" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div style="flex:1; min-width:0;">
+                <span class="badge badge-draft">No Quiz</span>
+                <h3 style="margin-top:0.3rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeAttr(c.title)}">${c.title}</h3>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.2rem;">No quiz created yet for this course</p>
+              </div>
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap; flex-shrink:0;">
+                <button class="btn" onclick="openManageQuiz('${c.id}')"><i data-lucide="plus"></i> Create Quiz</button>
+              </div>
+            </div>
+          `;
+        }
+      }));
+
+      container.innerHTML = items.join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function deleteQuizFromListing(courseId) {
+      if (!confirm('Delete this quiz? All student attempt records will be removed. This cannot be undone.')) return;
+      try {
+        await deleteQuizApi(courseId);
+        alert('Quiz deleted successfully');
+        await loadAllQuizzes();
       } catch (err) {
         alert(err.message || 'Failed to delete quiz');
       }

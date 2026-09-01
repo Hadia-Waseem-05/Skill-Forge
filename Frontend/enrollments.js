@@ -176,3 +176,25 @@ async function updateQuizApi(courseId, payload) {
 async function deleteQuizApi(courseId) {
     return apiFetch(`/quiz/${courseId}`, { method: "DELETE" });
 }
+
+// ---- Certificate (binary PDF response) ----
+async function downloadCertificatePdfApi(studentName, courseName, courseId) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE}/certificate/generate`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ studentName, courseName, course_id: courseId }),
+    });
+    if (!res.ok) {
+        let errorMsg = `Certificate request failed (${res.status})`;
+        try {
+            const data = await res.json();
+            errorMsg = data.message || errorMsg;
+        } catch (e) { /* response may not be JSON */ }
+        throw new Error(errorMsg);
+    }
+    return await res.blob();
+}
