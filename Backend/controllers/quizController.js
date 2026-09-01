@@ -265,7 +265,7 @@ const updateQuiz = async (req, res) => {
         const updated = await Quiz.findOneAndUpdate(
             { course_id },
             { questions },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
 
         if (!updated) {

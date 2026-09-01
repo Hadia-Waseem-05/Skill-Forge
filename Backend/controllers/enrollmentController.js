@@ -191,7 +191,7 @@ export const completeQuizAndFinishCourse = async (req, res) => {
             await Progress.findOneAndUpdate(
                 { enrollment_id: enrollment._id, lesson_id: lesson._id },
                 { completed: true, completed_date: new Date() },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: 'after' }
             );
         }
 
